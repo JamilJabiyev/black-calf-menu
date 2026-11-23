@@ -3,6 +3,8 @@
 Free QR menu for **Black Calf** (dürüm & kebab), hosted on GitHub Pages.
 One static page, no build step, no tracking, no paid services.
 
+**Live:** https://jamiljabiyev.github.io/black-calf-menu/ · **QR cards:** https://jamiljabiyev.github.io/black-calf-menu/qr.html
+
 - **Menu:** `index.html` + `app.js` + `styles.css` render everything from **`menu.json`**.
 - **QR cards:** open `qr.html` on the live site → print or download PNG/SVG.
 - **Languages:** AZ / RU / EN (remembers the visitor's choice; `?lang=ru` forces a language).
