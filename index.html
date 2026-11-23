@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#151311">
+<meta name="color-scheme" content="dark">
+<title>Black Calf — Menyu</title>
+<meta name="description" content="Black Calf — dürüm & kebab. Menyu / Меню / Menu.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="demo-bar" id="demoBar" hidden></div>
+
+  <header class="top">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="" class="logo" width="44" height="44">
+      <div>
+        <h1>BLACK CALF</h1>
+        <p class="welcome" id="welcome"></p>
+      </div>
+    </div>
+    <div class="langs" role="group" aria-label="Language">
+      <button data-lang="az">AZ</button><button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <nav class="cats" id="cats" aria-label="Categories"></nav>
+
+  <main id="menu" aria-live="polite">
+    <p class="loading">…</p>
+  </main>
+
+  <footer class="foot" id="foot"></footer>
+
+  <div class="actions" id="actions" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

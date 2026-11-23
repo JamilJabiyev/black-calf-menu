@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#24201C"/>
+  <!-- horns -->
+  <path d="M17 20c-5-1-8-5-8-9 4 3 8 4 12 4z" fill="#F3EADB"/>
+  <path d="M47 20c5-1 8-5 8-9-4 3-8 4-12 4z" fill="#F3EADB"/>
+  <!-- ears -->
+  <path d="M14 26c-4 0-7-2-8-5 4 0 8 0 11 2z" fill="#0d0b0a"/>
+  <path d="M50 26c4 0 7-2 8-5-4 0-8 0-11 2z" fill="#0d0b0a"/>
+  <!-- head -->
+  <path d="M32 14c10 0 16 7 16 16 0 7-3 11-5 15-2 5-5 9-11 9s-9-4-11-9c-2-4-5-8-5-15 0-9 6-16 16-16z" fill="#0d0b0a" stroke="#E8572A" stroke-width="2"/>
+  <!-- star -->
+  <path d="M32 21l1.6 3.4 3.7.4-2.8 2.5.8 3.7L32 29.2l-3.3 1.8.8-3.7-2.8-2.5 3.7-.4z" fill="#F3EADB"/>
+  <!-- eyes -->
+  <circle cx="25.5" cy="34" r="1.8" fill="#F3EADB"/><circle cx="38.5" cy="34" r="1.8" fill="#F3EADB"/>
+  <!-- muzzle -->
+  <ellipse cx="32" cy="46" rx="7" ry="5" fill="#2b2622"/>
+  <circle cx="29.5" cy="46" r="1.2" fill="#0d0b0a"/><circle cx="34.5" cy="46" r="1.2" fill="#0d0b0a"/>
+</svg>
