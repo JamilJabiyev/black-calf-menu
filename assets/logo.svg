@@ -1,18 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#24201C"/>
-  <!-- horns -->
-  <path d="M17 20c-5-1-8-5-8-9 4 3 8 4 12 4z" fill="#F3EADB"/>
-  <path d="M47 20c5-1 8-5 8-9-4 3-8 4-12 4z" fill="#F3EADB"/>
-  <!-- ears -->
-  <path d="M14 26c-4 0-7-2-8-5 4 0 8 0 11 2z" fill="#0d0b0a"/>
-  <path d="M50 26c4 0 7-2 8-5-4 0-8 0-11 2z" fill="#0d0b0a"/>
-  <!-- head -->
-  <path d="M32 14c10 0 16 7 16 16 0 7-3 11-5 15-2 5-5 9-11 9s-9-4-11-9c-2-4-5-8-5-15 0-9 6-16 16-16z" fill="#0d0b0a" stroke="#E8572A" stroke-width="2"/>
-  <!-- star -->
-  <path d="M32 21l1.6 3.4 3.7.4-2.8 2.5.8 3.7L32 29.2l-3.3 1.8.8-3.7-2.8-2.5 3.7-.4z" fill="#F3EADB"/>
-  <!-- eyes -->
-  <circle cx="25.5" cy="34" r="1.8" fill="#F3EADB"/><circle cx="38.5" cy="34" r="1.8" fill="#F3EADB"/>
-  <!-- muzzle -->
-  <ellipse cx="32" cy="46" rx="7" ry="5" fill="#2b2622"/>
-  <circle cx="29.5" cy="46" r="1.2" fill="#0d0b0a"/><circle cx="34.5" cy="46" r="1.2" fill="#0d0b0a"/>
+  <rect width="64" height="64" rx="14" fill="#151311"/>
+  <circle cx="32" cy="32" r="29" fill="none" stroke="#E8572A" stroke-width="2"/>
+  <g fill="#F3EADB" transform="translate(32 32) scale(.78) translate(-32 -33)">
+    <path d="M14 18C10 16 8 11 9 7c3 4 7 6 12 7zM50 18c4-2 6-7 5-11-3 4-7 6-12 7z"/>
+    <path d="M17 24c-6 1-11-1-13-5 5-1 10 0 15 2zM47 24c6 1 11-1 13-5-5-1-10 0-15 2z" opacity=".75"/>
+    <path fill-rule="evenodd" d="M32 12c10 0 15 7 15 15 0 7-3 11-4 17-1 7-5 12-11 12s-10-5-11-12c-1-6-4-10-4-17 0-8 5-15 15-15ZM32 19l1 2.62 2.8.14-2.18 1.77.73 2.71L32 24.7l-2.35 1.54.73-2.71-2.18-1.77 2.8-.14ZM24.2 33a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0ZM36.2 33a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0ZM26.4 48a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0ZM34.4 48a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0Z"/>
+  </g>
 </svg>

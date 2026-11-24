@@ -3,42 +3,130 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Black Calf — Menyu</title>
+<meta name="description" content="Black Calf: dürüm, fri, kombo. Menyu AZ / RU / EN.">
 <meta name="theme-color" content="#151311">
 <meta name="color-scheme" content="dark">
-<title>Black Calf — Menyu</title>
-<meta name="description" content="Black Calf — dürüm & kebab. Menyu / Меню / Menu.">
-<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23151311'/%3E%3Ccircle cx='32' cy='32' r='27' fill='none' stroke='%23E8572A' stroke-width='3'/%3E%3Cpath fill='%23F3EADB' d='M32 14c9 0 14 6 14 13 0 6-3 9-4 15-1 6-4 10-10 10s-9-4-10-10c-1-6-4-9-4-15 0-7 5-13 14-13Z'/%3E%3C/svg%3E">
+<script>
+  /* Runs before CSS: picks the language (?lang > saved > phone > az) so the right font subset
+     is requested and the page never flashes another language. main.js reads html[lang]. */
+  (function (doc) {
+    var langs = ['az', 'ru', 'en'], picked = 'az', saved = null, query = '';
+    try { saved = localStorage.getItem('bc-lang'); } catch (e) { /* private mode */ }
+    try { query = new URLSearchParams(location.search).get('lang') || ''; } catch (e) { /* very old browser */ }
+    var wanted = [query, saved].concat(navigator.languages || [navigator.language]);
+    for (var i = 0; i < wanted.length; i++) {
+      var code = String(wanted[i] || '').slice(0, 2).toLowerCase();
+      if (langs.indexOf(code) > -1) { picked = code; break; }
+    }
+    var root = doc.documentElement;
+    root.lang = picked;
+    root.className = 'js';
+    var fonts = picked === 'ru' ? ['unbounded-800-caps-ru', 'onest-400-ru'] : ['unbounded-800-caps-az', 'onest-400-700-az'];
+    fonts.forEach(function (name) {
+      var link = doc.createElement('link');
+      link.rel = 'preload'; link.as = 'font'; link.type = 'font/woff2'; link.crossOrigin = 'anonymous';
+      link.href = 'fonts/' + name + '.woff2';
+      doc.head.appendChild(link);
+    });
+  })(document);
+</script>
+<link rel="stylesheet" href="css/app.css">
+<link rel="preload" href="menu.json" as="fetch" crossorigin>
+<link rel="modulepreload" href="js/model.js">
+<link rel="modulepreload" href="js/views.js">
+<script type="module" src="js/main.js"></script>
 </head>
-<body>
-  <div class="demo-bar" id="demoBar" hidden></div>
+<body id="top">
+<a class="skip" href="#menu" data-js="skip">Menyuya keç</a>
 
-  <header class="top">
-    <div class="brand">
-      <img src="assets/logo.svg" alt="" class="logo" width="44" height="44">
-      <div>
-        <h1>BLACK CALF</h1>
-        <p class="welcome" id="welcome"></p>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="mark" viewBox="0 0 64 64">
+    <path d="M14 18C10 16 8 11 9 7c3 4 7 6 12 7zM50 18c4-2 6-7 5-11-3 4-7 6-12 7z"/>
+    <path d="M17 24c-6 1-11-1-13-5 5-1 10 0 15 2zM47 24c6 1 11-1 13-5-5-1-10 0-15 2z" opacity=".75"/>
+    <path fill-rule="evenodd" d="M32 12c10 0 15 7 15 15 0 7-3 11-4 17-1 7-5 12-11 12s-10-5-11-12c-1-6-4-10-4-17 0-8 5-15 15-15ZM32 19l1 2.62 2.8.14-2.18 1.77.73 2.71L32 24.7l-2.35 1.54.73-2.71-2.18-1.77 2.8-.14ZM24.2 33a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0ZM36.2 33a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0ZM26.4 48a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0ZM34.4 48a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0Z"/>
+  </symbol>
+  <symbol id="stamp" viewBox="0 0 200 200">
+    <g fill="none" style="stroke:var(--stamp-ring)">
+      <circle cx="100" cy="100" r="95" stroke-width="2.5"/>
+      <circle cx="100" cy="100" r="67" stroke-width="1"/>
+    </g>
+    <path id="stamp-arc" fill="none" d="M100 19a81 81 0 1 1 0 162a81 81 0 1 1 0-162"/>
+    <text class="stamp__ring-text" style="fill:var(--stamp-ring)"><textPath href="#stamp-arc" textLength="500" lengthAdjust="spacing">BLACK CALF · BLACK CALF · BLACK CALF ·</textPath></text>
+    <use href="#mark" x="58" y="56" width="84" height="84" style="fill:currentColor"/>
+  </symbol>
+  <symbol id="i-durum" viewBox="0 0 24 24"><path d="M7 21 5 8a7 4 0 0 1 14 0l-2 13ZM5.6 12.5 18.4 9"/></symbol>
+  <symbol id="i-fries" viewBox="0 0 24 24"><path d="M6 10h12l-1.5 11h-9ZM8 10V4m3 6V3m3 7V4.5m2.5 5.5V6"/></symbol>
+  <symbol id="i-sauce" viewBox="0 0 24 24"><path d="M5 11h14l-1.5 9h-11ZM4 11h16M9 11c0-3 1.5-5 3-5s3 2 3 5"/></symbol>
+  <symbol id="i-cup" viewBox="0 0 24 24"><path d="M6 7h12l-1.5 14h-9ZM5 7h14m-6 0 1-4h3"/></symbol>
+  <symbol id="i-armudu" viewBox="0 0 24 24"><path d="M8.5 4h7M9 4c0 3-2.5 4.5-2.5 8.5S9 19.5 12 19.5s5.5-3 5.5-7S15 7 15 4M6 21h12"/></symbol>
+  <symbol id="i-ayran" viewBox="0 0 24 24"><path d="M8 3h8m-7.5 0v3L7 9v12h10V9l-1.5-3V3M7 13h10"/></symbol>
+  <symbol id="i-bottle" viewBox="0 0 24 24"><path d="M10 2.5h4V5l2 3v13H8V8l2-3ZM8 12h8"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24"><path d="M3 9h18v11H3Zm0 0 2-5h14l2 5m-11 4h4"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5Z"/></symbol>
+  <symbol id="i-chili" viewBox="0 0 24 24"><path d="M14 6c3 0 5 2 5 5 0 6-7 10-14 10 5-2 8-6 8-11 0-2 0-3 1-4Zm0 0c0-1.5.8-2.5 2-3"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19C5 10 11 5 20 4c0 9-5 15-15 15Zm0 0 8-8"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5Z"/></symbol>
+  <symbol id="i-gluten" viewBox="0 0 24 24"><path d="M12 21V9m0 0c-2.5-1-3.5-3-3.5-5.5C11 4.5 12 6.5 12 9Zm0 0c2.5-1 3.5-3 3.5-5.5C13 4.5 12 6.5 12 9Zm0 6c-2.5-1-3.5-3-3.5-5.5 2.5 1 3.5 3 3.5 5.5Zm0 0c2.5-1 3.5-3 3.5-5.5-2.5 1-3.5 3-3.5 5.5Z"/></symbol>
+  <symbol id="i-milk" viewBox="0 0 24 24"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/></symbol>
+  <symbol id="i-egg" viewBox="0 0 24 24"><path d="M12 3c3.5 0 6 6 6 10.5a6 6 0 0 1-12 0C6 9 8.5 3 12 3Z"/></symbol>
+  <symbol id="i-sesame" viewBox="0 0 24 24"><ellipse cx="6.5" cy="13" rx="1.6" ry="2.6" transform="rotate(-20 6.5 13)"/><ellipse cx="12" cy="10" rx="1.6" ry="2.6"/><ellipse cx="17.5" cy="13" rx="1.6" ry="2.6" transform="rotate(20 17.5 13)"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><path d="m4 20 1.3-4A8 8 0 1 1 8 18.7ZM9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1a5 5 0 0 1-2.5-2.5l1-1-1-2Z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Zm0-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><path d="M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Zm8 7.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 7h.01"/></symbol>
+</svg>
+
+<p class="demo" role="note" data-js="demo"><b>DEMO</b><span data-js="demo-text"></span></p>
+
+<div class="layout">
+  <div class="aside">
+    <header class="top">
+      <h1 class="u-vh" data-js="h1">Black Calf — Menyu</h1>
+      <a class="brand" href="#top" aria-label="Black Calf">
+        <svg class="mark" width="36" height="36" aria-hidden="true" focusable="false"><use href="#mark"/></svg>
+        <span class="brand__word" aria-hidden="true">BLACK CALF</span>
+      </a>
+      <div class="lang" role="group" aria-label="Dil / Язык / Language" data-js="lang">
+        <button type="button" lang="az" data-lang="az" aria-pressed="true">AZ</button>
+        <button type="button" lang="ru" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" lang="en" data-lang="en" aria-pressed="false">EN</button>
       </div>
-    </div>
-    <div class="langs" role="group" aria-label="Language">
-      <button data-lang="az">AZ</button><button data-lang="ru">RU</button><button data-lang="en">EN</button>
-    </div>
-  </header>
+      <p class="top__welcome" data-js="welcome"></p>
+    </header>
 
-  <nav class="cats" id="cats" aria-label="Categories"></nav>
+    <section class="hero" id="qara" aria-labelledby="hero-t" data-js="hero">
+      <div class="hero__media" aria-hidden="true">
+        <span class="stamp" data-js="stamp">
+          <span class="stamp__flash"></span>
+          <span class="stamp__iron">
+            <svg class="stamp__burnt" viewBox="0 0 200 200" focusable="false"><use href="#stamp"/></svg>
+            <svg class="stamp__hot" viewBox="0 0 200 200" focusable="false"><use href="#stamp"/></svg>
+          </span>
+          <span class="stamp__smoke"></span><span class="stamp__smoke"></span><span class="stamp__smoke"></span>
+        </span>
+      </div>
+      <div class="hero__body" data-js="hero-body">
+        <span class="sk sk--kicker"></span>
+        <span class="sk sk--title" id="hero-t"></span>
+        <span class="sk"></span><span class="sk"></span><span class="sk sk--short"></span>
+        <p class="hero__status" role="status" data-js="status"></p>
+      </div>
+    </section>
 
-  <main id="menu" aria-live="polite">
-    <p class="loading">…</p>
-  </main>
+    <div data-js="actions"></div>
+  </div>
 
-  <footer class="foot" id="foot"></footer>
+  <div class="main">
+    <nav class="catnav" aria-label="Kateqoriyalar" data-js="catnav"></nav>
+    <main class="menu" id="menu" tabindex="-1" data-js="menu"></main>
+    <footer class="foot" data-js="foot"></footer>
+  </div>
+</div>
 
-  <div class="actions" id="actions" hidden></div>
-
-  <script src="app.js"></script>
+<noscript>
+  <p class="noscript">Menyunu görmək üçün JavaScript-i aktiv edin.<br>Чтобы увидеть меню, включите JavaScript.<br>Turn on JavaScript to see the menu.</p>
+</noscript>
 </body>
 </html>
