@@ -3,7 +3,7 @@
   "schema_version": 2,
   "currency": "AZN",
   "is_demo": true,
-  "version": "2026-11-24-demo-v2",
+  "version": "2026-11-24-demo-v3",
   "languages": [
     "az",
     "ru",
@@ -84,9 +84,9 @@
             "en": "A 4 ₼ dürüm of your choice (No.3 beef Original, No.6 Midnight or No.7 Rebel) + Saman fries + Cola 0.3 or ayran. Lunch for one stubborn soul."
           },
           "short_description": {
-            "az": "4 ₼-lıq dürüm seçimi (mal ətli Original, Midnight və ya Rebel) + Saman fri + Cola 0,3 və ya ayran. Bir inadkarın naharı.",
-            "ru": "Дюрюм за 4 ₼ на выбор (Original с говядиной, Midnight или Rebel) + фри Saman + Cola 0,3 или айран. Обед одного упрямого.",
-            "en": "A 4 ₼ dürüm of your choice (beef Original, Midnight or Rebel) + Saman fries + Cola 0.3 or ayran. Lunch for one stubborn soul."
+            "az": "Bir inadkarın naharı.",
+            "ru": "Обед одного упрямого.",
+            "en": "Lunch for one stubborn soul."
           },
           "price": 6.9,
           "weight_g": null,
@@ -137,9 +137,9 @@
             "en": "2 dürüms of your choice (No.3 beef Original, No.4 Gold, No.6 Midnight, No.7 Rebel, No.8 Dost) + large Saman fries + 2 drinks (Cola 0.3 or ayran) + 1 sauce. For two. That's how Black Calf began."
           },
           "short_description": {
-            "az": "2 dürüm seçimi (mal ətli Original, Gold, Midnight, Rebel, Dost) + böyük Saman fri + 2 içki (Cola 0,3 və ya ayran) + 1 sous. İki nəfərlik — Black Calf da belə başladı.",
-            "ru": "2 дюрюма на выбор (Original с говядиной, Gold, Midnight, Rebel, Dost) + большая фри Saman + 2 напитка (Cola 0,3 или айран) + 1 соус. На двоих — как и начинался Black Calf.",
-            "en": "2 dürüms of your choice (beef Original, Gold, Midnight, Rebel, Dost) + large Saman fries + 2 drinks (Cola 0.3 or ayran) + 1 sauce. For two. That's how Black Calf began."
+            "az": "İki nəfərlik — Black Calf da belə başladı.",
+            "ru": "На двоих — как и начинался Black Calf.",
+            "en": "For two. That's how Black Calf began."
           },
           "price": 13.9,
           "weight_g": null,
@@ -197,9 +197,9 @@
             "en": "4 dürüms of your choice (from the S2 list) + 2 large Saman fries + 4 drinks (Cola 0.3 or ayran) + 2 sauces. The whole herd's here. Office lunch sorted."
           },
           "short_description": {
-            "az": "4 dürüm seçimi (Dost Set-dəki siyahıdan) + 2 böyük Saman fri + 4 içki (Cola 0,3 və ya ayran) + 2 sous. Bütün sürü bir yerdə. Ofis naharı üçün.",
-            "ru": "4 дюрюма на выбор (из списка Dost Set) + 2 большие фри Saman + 4 напитка (Cola 0,3 или айран) + 2 соуса. Всё стадо в сборе. Для обеда в офисе.",
-            "en": "4 dürüms of your choice (from the Dost Set list) + 2 large Saman fries + 4 drinks (Cola 0.3 or ayran) + 2 sauces. The whole herd's here. Office lunch sorted."
+            "az": "Bütün sürü bir yerdə. Ofis naharı üçün.",
+            "ru": "Всё стадо в сборе. Для обеда в офисе.",
+            "en": "The whole herd's here. Office lunch sorted."
           },
           "price": 27.5,
           "weight_g": null,
@@ -263,9 +263,9 @@
             "en": "No.6 Midnight + Gold Fries + tea. From 22:00 until closing. Night shift fuel."
           },
           "short_description": {
-            "az": "Midnight + Gold Fries + çay. Saat 22:00-dan bağlanana qədər. Qəhrəmanlar üçün gecə növbəsi.",
-            "ru": "Midnight + Gold Fries + чай. С 22:00 до закрытия. Ночная смена для героев.",
-            "en": "Midnight + Gold Fries + tea. From 22:00 until closing. Night shift fuel."
+            "az": "Qəhrəmanlar üçün gecə növbəsi.",
+            "ru": "Ночная смена для героев.",
+            "en": "Night shift fuel."
           },
           "price": 7.5,
           "weight_g": null,
@@ -371,11 +371,13 @@
             "en": "Original — classic dürüm (chicken / beef)"
           },
           "description": {
-            "az": "Toyuq — duzlu xiyarla, ya da mal əti — sumaqlı soğanla. Pomidor, xiyar, kahı, ağ sarımsaqlı sous, isti lavaş. Hər şey ondan başladı. Lavaşda dönər, şaurma.",
-            "ru": "Курица с маринованным огурцом или говядина с луком и сумахом. Томаты, огурец, салат, белый чесночный соус, горячий лаваш. Тот самый — с него всё началось. Донер в лаваше, шаурма.",
+            "az": "Toyuq — duzlu xiyarla, ya da mal əti — sumaqlı soğanla. Pomidor, xiyar, kahı, ağ sarımsaqlı sous, isti lavaş. Hər şey ondan başladı.",
+            "ru": "Курица с маринованным огурцом или говядина с луком и сумахом. Томаты, огурец, салат, белый чесночный соус, горячий лаваш. Тот самый — с него всё началось.",
             "en": "Chicken with pickles or beef with sumac onions. Tomato, cucumber, lettuce, white garlic sauce, hot grilled lavash. The one that started it all."
           },
           "search_terms": {
+            "az": "Lavaşda dönər, şaurma.",
+            "ru": "Донер в лаваше, шаурма.",
             "en": "Classic doner / shawarma durum wrap."
           },
           "price": 4.0,
@@ -1014,7 +1016,7 @@
     },
     "hero_phrase": {
       "az": "Qara hazırdır!",
-      "ru": "Чёрный готов!",
+      "ru": "QARA готов!",
       "en": "QARA is ready!"
     }
   },
@@ -1064,11 +1066,6 @@
       "az": "Ətraflı",
       "ru": "Подробнее",
       "en": "Details"
-    },
-    "number_sr": {
-      "az": "№{n}",
-      "ru": "№{n}",
-      "en": "No. {n}"
     },
     "manat": {
       "az": "manat",
@@ -1188,6 +1185,26 @@
       "az": "Xəritə",
       "ru": "Маршрут",
       "en": "Directions"
+    },
+    "more_toggle": {
+      "az": "Daha çox",
+      "ru": "Подробнее",
+      "en": "More"
+    },
+    "teaser": {
+      "az": "{cat}: qənaət {x}-dan",
+      "ru": "{cat}: выгода от {x}",
+      "en": "{cat}: save from {x}"
+    },
+    "upsell_combo": {
+      "az": "Kombo et: +{x} → {set}",
+      "ru": "Сделай комбо: +{x} → {set}",
+      "en": "Make it a combo: +{x} → {set}"
+    },
+    "upsell_sauce": {
+      "az": "+ sous {x}",
+      "ru": "+ соус {x}",
+      "en": "+ sauce {x}"
     }
   }
 }
