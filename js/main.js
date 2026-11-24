@@ -1,8 +1,8 @@
 // Composition root: owns state and the DOM (render, language, scroll-spy, motion hooks).
-import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r4';
-import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r4';
+import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r5';
+import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r5';
 
-const BUILD = '2026-11-25-r4'; // = <html data-build>, set by tools/bump_version.py
+const BUILD = '2026-11-25-r5'; // = <html data-build>, set by tools/bump_version.py
 // Shown before or without menu.json, so they cannot live in its "ui" block.
 const OFFLINE_STRINGS = {
   az: { page: 'Black Calf — Menyu', skip: 'Menyuya keç', loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', empty: 'Menyu müvəqqəti əlçatan deyil. Kassada soruşun.', retry: 'Yenidən cəhd et' },
@@ -237,7 +237,7 @@ function openSheet(id) {
   } else {
     sheet.querySelector('[data-js="sheet-panel"]').scrollTop = 0;
   }
-  sheet.querySelector('[data-js="close"]').focus();
+  sheet.querySelector('[data-js="close"]').focus({ focusVisible: false }); // no ring after a tap; keyboard users still land here
 }
 
 /** Every close goes through history so Back, ×, Esc, backdrop and swipe behave the same. */
@@ -253,7 +253,7 @@ function closeSheet() {
     sheet.close();
     sheet.classList.remove('is-closing');
     root.classList.remove('has-sheet');
-    opener?.focus({ preventScroll: true });
+    opener?.focus({ preventScroll: true, focusVisible: false });
   };
   if (!canAnimate()) return finish();
   sheet.classList.add('is-closing');

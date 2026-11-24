@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-25-r4';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r5';
 
 // ---------- safe templating ----------
 
@@ -174,7 +174,7 @@ export function heroBody(item, ctx) {
     <h2 class="hero__title" id="hero-t">${name(item.title, ctx)}</h2>
     ${item.subtitle ? html`<p class="hero__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     <p class="hero__desc clamp" id="d-hero">${ctx.pick(item.description)}</p>
-    <button class="more" type="button" aria-expanded="false" aria-controls="d-hero" data-js="expand">${ctx.t('more_toggle')}${chevron()}</button>
+    <button class="more" type="button" aria-expanded="false" aria-controls="d-hero" data-js="expand">${ctx.t('more_toggle')}</button>
     <div class="hero__buy">${price(item.priceCents, ctx, { cls: 'price--xl' })}${phrase ? html`<span class="sticker">${phrase}</span>` : ''}</div>
     <div class="hero__meta">${meta(item, ctx)}${tagList(item, ctx)}</div>`;
 }

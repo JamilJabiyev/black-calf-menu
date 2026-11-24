@@ -72,7 +72,7 @@
     --radius-xs: 6px; --radius-s: 10px; --radius-m: 16px; --radius-l: 24px; --radius-pill: 999px;
     --tap: 44px;
     --nav-h: 49px; /* main.js overwrites it with the measured height */
-    --stamp-size: min(46vw, 250px);
+    --stamp-size: min(32vw, 190px);
     --shadow-card: inset 0 1px 0 rgb(243 234 219 / .06);
     --ring-ember: inset 0 0 0 1px rgb(232 87 42 / .35);
 
@@ -203,14 +203,14 @@
   }
   @supports (font-size: 1cqi) {
     /* size QARA and the stamp to the hero itself: same proportions on a phone and in the desktop panel */
-    .hero { container-type: inline-size; --fs-hero: clamp(56px, 23cqi, 130px); --stamp-size: min(48cqi, 260px); }
+    .hero { container-type: inline-size; --fs-hero: clamp(52px, 21cqi, 120px); --stamp-size: min(34cqi, 200px); }
   }
   .hero__media { position: absolute; z-index: -1; top: var(--space-3); inset-inline-end: var(--space-3); }
   .hero__body { position: relative; pointer-events: none; } /* taps fall through to the stamp */
   .hero__body a, .hero__body button { pointer-events: auto; }
   .kicker { max-width: calc(100% - var(--stamp-size)); font: 700 var(--fs-micro)/1.2 var(--font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--color-accent-text); }
   .hero__title {
-    margin-top: calc(var(--stamp-size) * .46);
+    margin-top: calc(var(--stamp-size) * .92); /* below the stamp: QARA never lies on it */
     font: 800 var(--fs-hero)/.86 var(--font-display); letter-spacing: -.03em; text-transform: uppercase;
   }
   .hero__sub { margin-top: var(--space-3); font-weight: 700; color: var(--color-text-2); line-height: 1.3; }
@@ -262,7 +262,7 @@
   /* skeleton while menu.json loads: same rhythm as the real hero to avoid layout shift */
   .sk { display: block; height: 14px; width: 88%; margin-top: 10px; border-radius: var(--radius-xs); background: var(--color-surface-1); }
   .sk--kicker { width: 34%; height: 12px; margin-top: 0; }
-  .sk--title { width: 62%; height: calc(var(--fs-hero) * .86); margin-top: calc(var(--stamp-size) * .46); margin-bottom: 14px; }
+  .sk--title { width: 62%; height: calc(var(--fs-hero) * .86); margin-top: calc(var(--stamp-size) * .92); /* below the stamp: QARA never lies on it */ margin-bottom: 14px; }
   .sk--sub { width: 60%; height: 16px; }
   .sk--short { width: 52%; }
   .sk--price { width: 40%; height: 40px; margin-top: 18px; }
@@ -490,7 +490,8 @@
   .set { position: relative; }
   .set__open { text-align: start; text-transform: inherit; letter-spacing: inherit; font: inherit; color: inherit; }
   .set__open::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
-  .item__toggle .chev, .set__open .chev { rotate: -90deg; opacity: .55; margin-inline-start: 6px; font-size: .7em; vertical-align: middle; }
+  .set__open .chev { display: none; } /* big set titles wrap: the whole card is the affordance */
+  .item__toggle .chev { rotate: -90deg; opacity: .55; margin-inline-start: 6px; font-size: .7em; vertical-align: middle; }
   :is(.item, .set) :is(a, .variants, .line__vars) { position: relative; z-index: 1; }
 
   /* ---------- details sheet (native <dialog>; slides up on phones, centred card on wide screens) ---------- */
