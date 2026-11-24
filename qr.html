@@ -1,107 +1,38 @@
 <!doctype html>
-<html lang="az">
+<html lang="az" class="js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Black Calf — QR</title>
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<style>
-  :root { --bg: #151311; --card: #24201C; --line: #3a332c; --text: #F3EADB; --muted: #B8AE9F; --fire: #E8572A; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Manrope, system-ui, sans-serif; }
-  .wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
-  h1 { font: 700 22px Oswald, sans-serif; letter-spacing: .08em; margin: 0 0 4px; }
-  .muted { color: var(--muted); font-size: 13px; }
-  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; align-items: end; }
-  label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); flex: 1 1 220px; }
-  input, select { background: #0e0c0b; color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; width: 100%; }
-  button { background: var(--fire); color: #fff; border: 0; border-radius: 10px; padding: 10px 14px; font: 800 14px Manrope, sans-serif; cursor: pointer; }
-  button.ghost { background: var(--card); color: var(--text); border: 1px solid var(--line); }
-  .sheet { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
-  /* printable card */
-  .card { width: 90mm; height: 120mm; background: #151311; color: #F3EADB; border-radius: 6mm; padding: 7mm; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; border: 1px solid #3a332c; }
-  .card .brand { display: flex; align-items: center; gap: 3mm; }
-  .card .brand img { width: 12mm; height: 12mm; border-radius: 3mm; }
-  .card .brand b { font: 700 9mm/1 Oswald, sans-serif; letter-spacing: .08em; }
-  .card .qr { background: #fff; padding: 3mm; border-radius: 3mm; line-height: 0; }
-  .card .qr svg { width: 55mm; height: 55mm; display: block; }
-  .card .scan { font: 700 5mm/1.2 Oswald, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #E8572A; }
-  .card .langs { font-size: 3.3mm; color: #B8AE9F; line-height: 1.4; }
-  .card .url { font-size: 2.8mm; color: #B8AE9F; word-break: break-all; }
-  @media print {
-    @page { size: A4; margin: 10mm; }
-    body { background: #fff; }
-    .no-print { display: none !important; }
-    .wrap { padding: 0; max-width: none; }
-    .card { -webkit-print-color-adjust: exact; print-color-adjust: exact; break-inside: avoid; }
-  }
-</style>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/qr.css">
+<script defer src="js/vendor/qrcode-generator-1.4.4.min.js"></script>
+<script type="module" src="js/qr.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <div class="no-print">
-    <h1>BLACK CALF · QR</h1>
-    <div class="muted">QR-kartları çap et və ya yüklə / Распечатай или скачай QR-карточки / Print or download QR cards.</div>
-    <div class="controls">
-      <label>Menu URL <input id="url"></label>
-      <label>Yer / Место / Place (src)
-        <select id="src">
-          <option value="">—</option><option value="table">table</option><option value="board">board</option>
-          <option value="window">window</option><option value="pack">pack</option><option value="insta">insta</option>
+<main class="qr-page">
+  <div class="qr-tools">
+    <h1 class="qr-tools__t">Black Calf · QR</h1>
+    <p class="qr-tools__hint">QR-kartları çap et və ya yüklə · Распечатай или скачай QR-карточки · Print or download QR cards.</p>
+    <form class="qr-form" data-js="form">
+      <label class="qr-field">Menu URL<input name="url" type="url" required></label>
+      <label class="qr-field">Yer / Место / Place (src)
+        <select name="src">
+          <option value="">—</option><option>table</option><option>board</option>
+          <option>window</option><option>pack</option><option>insta</option>
         </select>
       </label>
-      <label style="flex:0 1 110px">Say / Кол-во <input id="count" type="number" min="1" max="12" value="4"></label>
-      <button id="print">🖨 Print</button>
-      <button class="ghost" id="svg">⬇ SVG</button>
-      <button class="ghost" id="png">⬇ PNG</button>
-    </div>
+      <label class="qr-field qr-field--s">Say / Кол-во<input name="count" type="number" min="1" max="12" value="4"></label>
+      <div class="qr-actions">
+        <button class="btn btn--primary" type="button" data-js="print">Print</button>
+        <button class="btn btn--ghost" type="button" data-js="svg">SVG</button>
+        <button class="btn btn--ghost" type="button" data-js="png">PNG</button>
+      </div>
+    </form>
   </div>
-  <div class="sheet" id="sheet"></div>
-</div>
-<script>
-(function () {
-  var base = location.href.replace(/qr\.html.*$/, "");
-  var $ = function (id) { return document.getElementById(id); };
-  $("url").value = base;
-  function fullUrl() {
-    var u = $("url").value.trim() || base, s = $("src").value;
-    return s ? u + (u.indexOf("?") >= 0 ? "&" : "?") + "src=" + encodeURIComponent(s) : u;
-  }
-  function svgFor(text) {
-    var qr = qrcode(0, "M"); qr.addData(text); qr.make();
-    return qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
-  }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function draw() {
-    var u = fullUrl(), n = Math.max(1, Math.min(12, +$("count").value || 1)), svg = svgFor(u), html = "";
-    for (var i = 0; i < n; i++) {
-      html += '<div class="card"><div class="brand"><img src="assets/logo.svg" alt=""><b>BLACK CALF</b></div>' +
-        '<div class="qr">' + svg + '</div>' +
-        '<div><div class="scan">Menyu · Меню · Menu</div>' +
-        '<div class="langs">Kameranı QR-a tut · Наведи камеру · Scan with your camera</div></div>' +
-        '<div class="url">' + esc(u) + '</div></div>';
-    }
-    $("sheet").innerHTML = html;
-  }
-  function download(name, blob) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); }
-  $("svg").onclick = function () { download("black-calf-menu-qr.svg", new Blob([svgFor(fullUrl())], { type: "image/svg+xml" })); };
-  $("png").onclick = function () {
-    var qr = qrcode(0, "M"); qr.addData(fullUrl()); qr.make();
-    var n = qr.getModuleCount(), cell = 24, pad = cell * 4, c = document.createElement("canvas");
-    c.width = c.height = n * cell + pad * 2; var g = c.getContext("2d");
-    g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.fillStyle = "#000";
-    for (var r = 0; r < n; r++) for (var k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect(pad + k * cell, pad + r * cell, cell, cell);
-    c.toBlob(function (b) { download("black-calf-menu-qr.png", b); });
-  };
-  $("print").onclick = function () { window.print(); };
-  ["url", "src", "count"].forEach(function (id) { $(id).addEventListener("input", draw); });
-  draw();
-})();
-</script>
+  <div class="qr-sheet" data-js="sheet"></div>
+</main>
 </body>
 </html>
