@@ -1,28 +1,51 @@
 # Black Calf — QR menu
 
-Free QR menu for **Black Calf** (dürüm & kebab), hosted on GitHub Pages.
-One static page, no build step, no tracking, no paid services.
+QR menu for **Black Calf** (dürüm & kebab) on GitHub Pages. Static site, no build step, no frameworks,
+no trackers, no third-party requests. Everything on the page comes from **`menu.json`**.
 
 **Live:** https://jamiljabiyev.github.io/black-calf-menu/ · **QR cards:** https://jamiljabiyev.github.io/black-calf-menu/qr.html
 
-- **Menu:** `index.html` + `app.js` + `styles.css` render everything from **`menu.json`**.
-- **QR cards:** open `qr.html` on the live site → print or download PNG/SVG.
-- **Languages:** AZ / RU / EN (remembers the visitor's choice; `?lang=ru` forces a language).
+> Current content is a **DEMO** (`"is_demo": true`): prices, weights and ingredients are placeholders.
+> Set `"is_demo": false` when the real menu is ready and the DEMO strip disappears.
 
-> ⚠️ Current content is a **DEMO** (`"is_demo": true`). Prices, weights and ingredients are placeholders.
+## Structure
+
+```
+index.html            shell: header, language switch, hero skeleton, SVG sprite, mount points
+css/app.css           all styles in @layer reset, tokens, base, layout, components, motion, utilities
+js/main.js            composition root: state, render, language, scroll-spy, motion hooks, SW registration
+js/model.js           pure data: language, money/size formatting, menu model, set price checks
+js/views.js           html`` template (escapes by default), safeUrl, mount, all components
+sw.js                 service worker: static cache-first, index + menu.json stale-while-revalidate
+fonts/                self-hosted woff2 subsets (Unbounded 800 caps, Onest) + OFL.txt
+qr.html, js/qr.js, css/qr.css, js/vendor/   printable QR cards (vendored qrcode-generator 1.4.4, MIT)
+tools/check.py        checks before every commit
+tools/fetch_fonts.py  rebuilds the font subsets
+```
 
 ## Update the menu
 
-1. Edit `menu.json` (prices, names, descriptions, tags, allergens).
-2. Contacts for the bottom buttons: fill `contact.whatsapp`, `contact.phone`, `contact.maps_url`, `contact.instagram` (empty = button hidden).
-3. When the real menu is ready, set `"is_demo": false` — the yellow demo bar disappears.
-4. Commit and push to `main` — GitHub Pages updates the site in ~1 minute.
+1. Edit `menu.json` (prices, names, descriptions, tags, allergens). Interface strings live in `ui`.
+2. Run `python3 tools/check.py`. It fails on invalid JSON, a set whose "separately"/savings do not match
+   the real item prices, a missing translation, a non-whitelisted tag, or a budget overrun.
+3. On a release, bump `VERSION` in `sw.js` (and `version` in `menu.json`) so returning guests get the new files.
+4. Commit and push to `main`. GitHub Pages updates in about a minute.
 
-Rules from the legal check: Azerbaijani first; no "best / №1 / only" claims; never show `halal_tbd` (internal tag) unless there is a certificate; keep allergens on every item; set prices "separately" must match real item prices.
+Legal rules: Azerbaijani first; no "best / №1 / only" claims; only the tags `hit`, `new`, `spicy`, `veg` are ever
+shown; internal data (halal status, secret items) stays out of this public repo; allergens on every item.
+
+- **Contacts:** fill `contact.whatsapp`, `contact.phone`, `contact.maps_url`, `contact.instagram`; the contact
+  bar appears automatically. Empty values mean no button.
+- **Sets:** the site recomputes "separately" and the savings from `set_items` / `set_choices` and shows
+  "save from X" (the guaranteed minimum). If the numbers in the file disagree, the savings are hidden.
+- **Night set:** while `availability.status` starts with `tbd`, the set is not shown.
+- **Languages:** `?lang=` → saved choice → phone language → AZ.
 
 ## Run locally
 
 ```bash
-python3 -m http.server 8080
+python3 -m http.server 8080      # then open http://localhost:8080 (add ?debug to see data warnings)
+python3 tools/check.py
 ```
-Then open http://localhost:8080.
+
+Service worker emergency switch: set `KILL = true` in `sw.js` and deploy; it clears its caches and unregisters.
