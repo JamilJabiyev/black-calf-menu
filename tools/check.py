@@ -28,7 +28,9 @@ BUDGET = {
 }
 # Documented deviations awaiting a perf decision: key -> (hard ceiling, reason). Printed, never silent.
 EXCEPTIONS = {
-    "JS incl. sw.js": (16 * KB, "Jarvis round 2: unminified source, no build step (charter limit 25 KB)"),
+    "JS incl. sw.js": (22 * KB, "Jarvis: details sheet added; unminified source, no build step (charter limit 25 KB)"),
+    "CSS": (12 * KB, "Jarvis 2026-11-25: details sheet + card motion (+~1 KB); total first visit stays well under 100 KB"),
+    "First screen without fonts": (44 * KB, "Jarvis 2026-11-25: same reason as CSS/JS; total first visit stays under 100 KB"),
 }
 PAGE_CSS = ["css/app.css"]
 PAGE_JS = ["js/main.js", "js/model.js", "js/views.js", "sw.js"]

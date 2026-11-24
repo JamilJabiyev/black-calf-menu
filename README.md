@@ -42,6 +42,12 @@ shown; internal data (halal status, secret items) stays out of this public repo;
   "save from X" (the guaranteed minimum). If the numbers in the file disagree, the savings are hidden.
 - **Night set:** while `availability.status` starts with `tbd`, the set is not shown.
 - **Languages:** `?lang=` → saved choice → phone language → AZ.
+- **Details & photos:** tapping any card opens a details sheet. Until real photos exist it shows a branded
+  placeholder (no stock photos: guests must see the real portion). To add a photo, put it in `img/`
+  (WebP, 4:3, ~1200×900, ≤ 120 KB, e.g. `img/durum-qara.webp`) and set `"image": "img/durum-qara.webp"` on the item.
+  Photos load only when a sheet is opened, so they never slow down the first screen.
+- **v1 → v2 bridge:** `app.js` and `styles.css` in the root only serve guests whose browser cached the old v1 page;
+  they refresh it once into v2. Keep them (and the v1 fields in `menu.json`) until at least 2026-12-25.
 
 ## Run locally
 

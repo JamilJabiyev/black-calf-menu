@@ -1205,6 +1205,26 @@
       "az": "+ sous {x}",
       "ru": "+ соус {x}",
       "en": "+ sauce {x}"
+    },
+    "list_and": {
+      "az": " və ",
+      "ru": " и ",
+      "en": " & "
+    },
+    "offline_note": {
+      "az": "Oflayn: menyu {date} tarixli versiyadır",
+      "ru": "Офлайн: версия меню от {date}",
+      "en": "Offline: menu as of {date}"
+    },
+    "photo_soon": {
+      "az": "Foto tezliklə",
+      "ru": "Фото скоро",
+      "en": "Photo coming soon"
+    },
+    "close": {
+      "az": "Bağla",
+      "ru": "Закрыть",
+      "en": "Close"
     }
   }
 }

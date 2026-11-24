@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-24-r2';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r4';
 
 // ---------- safe templating ----------
 
@@ -36,6 +36,7 @@ export function safeUrl(url, allowed = ['https:']) {
 }
 
 export function mount(element, fragment) {
+  if (!element) return; // stale or foreign shell: main.js decides what to do
   element.innerHTML = fragment instanceof SafeHtml ? fragment.value : escapeHtml(fragment);
 }
 
@@ -64,8 +65,15 @@ const markIcon = () => html`<svg class="mark" aria-hidden="true" focusable="fals
 /** Cashier number; read as "01", never "No. 1" (legal). */
 const displayNo = (number) => (/^\d+$/.test(number) ? number.padStart(2, '0') : number);
 
-/** Latin brand names ("Midnight") get lang="en", so AZ uppercasing never makes "MİDNİGHT". */
-const nameLang = (l10n, ctx) => (ctx.lang !== 'en' && l10n.en && ctx.pick(l10n) === l10n.en ? html` lang="en"` : '');
+/**
+ * Latin brand names ("Midnight") are uppercased as English so AZ never shows "MİDNİGHT"; the visual copy is
+ * aria-hidden and screen readers get the name in the page language (QARA, Dost read correctly).
+ */
+function name(l10n, ctx, prefix = '') {
+  const text = ctx.pick(l10n);
+  if (ctx.lang === 'en' || !l10n.en || text !== l10n.en) return html`${prefix ? html`<span class="u-vh">${prefix} </span>` : ''}${text}`;
+  return html`<span class="u-vh">${prefix ? `${prefix} ` : ''}${text}</span><span aria-hidden="true" lang="en">${text}</span>`;
+}
 
 function amount(cents, ctx, sign = '') {
   return html`${sign}${formatAmount(cents, ctx.lang)}<span class="cur" aria-hidden="true">₼</span><span class="u-vh"> ${ctx.t('manat')}</span>`;
@@ -88,7 +96,7 @@ function tagList(item, ctx, extra = '') {
     const label = ctx.pick(ctx.model.tagLabels[tag]);
     if (!label) return '';
     const glyph = tag === 'hit' ? icon('flame') : tag === 'veg' ? icon('leaf') : '';
-    return html`<li class="tag tag--${tag}"${nameLang(ctx.model.tagLabels[tag], ctx)}>${glyph}${label}</li>`;
+    return html`<li class="tag tag--${tag}">${glyph}${name(ctx.model.tagLabels[tag], ctx)}</li>`;
   });
   if (!extra && !tags.some(Boolean)) return '';
   return html`<ul class="tags" role="list">${extra}${tags}</ul>`;
@@ -103,12 +111,15 @@ function spice(level, ctx, withWord) {
 }
 
 /** Visible label + link to the shared-kitchen note (BA AC-08.1, AC-08.6). Empty list → nothing (decision 12). */
-function allergenList(keys, ctx) {
+function allergenList(keys, ctx, of = '') {
   if (!keys || !keys.length) return '';
   const legend = ctx.model.allergenLegend;
-  return html`<a class="allergens" href="#notes"><span class="allergens__label">${ctx.t('allergens')}:</span>${keys.map((key) => html`
+  return html`<a class="allergens" href="#notes"><span class="allergens__label">${ctx.t('allergens')}${of ? ` (${of})` : ''}:</span>${keys.map((key) => html`
     <span class="allergen">${ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(legend[key]) || key}</span>`)}</a>`;
 }
+
+/** "2026-11-24" → "24.11.2026" (az/ru), "24/11/2026" (en). */
+const formatDate = (iso, lang) => iso.split('-').reverse().join(lang === 'en' ? '/' : '.');
 
 const sizeOf = (thing, ctx) => formatSize(thing, ctx.model.ui.units || {}, ctx.lang);
 
@@ -124,22 +135,34 @@ function meta(item, ctx, { size = true, allergens = true } = {}) {
 /** Variants override item allergens only where they define their own (BA AC-05.2). */
 const ownAllergens = (item) => item.variants.some((v) => v.allergens !== null);
 
+/** "fri S və içki": what the price difference buys, from the set's own formula. */
+function partsPhrase(parts, ctx) {
+  const names = ctx.model.ui.set_parts || {};
+  return parts.map((p) => `${ctx.pick(names[p.key]).toLocaleLowerCase(ctx.lang)}${p.variant ? ` ${ctx.pick(p.variant)}` : ''}`)
+    .join(ctx.t('list_and'));
+}
+
 function upsell(item, ctx) {
   const hint = item.upsell;
   if (!hint) return '';
-  const text = hint.kind === 'combo'
-    ? fill(ctx.t('upsell_combo'), { x: amount(hint.deltaCents, ctx), set: hint.label })
-    : fill(ctx.t('upsell_sauce'), { x: amount(hint.deltaCents, ctx) });
-  return html`<a class="upsell" href="#item-${hint.targetId}">${text}${hint.variant ? ` · ${ctx.pick(hint.variant)}` : ''}</a>`;
+  // data-js="open": the hint opens the target's sheet (the href stays as a no-JS fallback)
+  if (hint.kind === 'sauce') {
+    return html`<a class="chip" href="#item-${hint.targetId}" data-js="open" data-id="${hint.targetId}">${fill(ctx.t('upsell_sauce'), { x: amount(hint.deltaCents, ctx) })}</a>`;
+  }
+  const text = fill(ctx.t('upsell_combo'), { x: amount(hint.deltaCents, ctx), parts: partsPhrase(hint.parts, ctx), set: hint.label });
+  return html`<a class="upsell" href="#item-${hint.targetId}" data-js="open" data-id="${hint.targetId}">${text}${hint.variant ? ` · ${ctx.pick(hint.variant)}` : ''}</a>`;
 }
 
-/** Row head: number in the left field, name (toggle when the row can expand), price. */
-function rowHead(item, ctx, priceHtml, expandable) {
-  const label = html`<span class="u-vh">${displayNo(item.number)} </span>${ctx.pick(item.title)}`;
+const chevron = () => html`<svg class="ic chev" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg>`;
+
+/** The title is the real button (keyboard, VoiceOver); its ::after stretches over the card so a tap anywhere opens it. */
+const openButton = (item, label, cls = 'item__toggle') => html`<button class="${cls}" type="button" aria-haspopup="dialog" data-js="open" data-id="${item.id}">${label}${chevron()}</button>`;
+
+/** Row head: number in the left field, name (opens the details sheet), price. */
+function rowHead(item, ctx, priceHtml) {
+  const label = name(item.title, ctx, displayNo(item.number));
   return html`<span class="item__no" aria-hidden="true">${displayNo(item.number)}</span>
-    <div class="item__head"><h3 class="item__title" id="t-${item.id}"${nameLang(item.title, ctx)}>${expandable
-      ? html`<button class="item__toggle" type="button" aria-expanded="false" aria-controls="d-${item.id}" data-js="expand">${label}</button>`
-      : label}</h3>${priceHtml}</div>`;
+    <div class="item__head"><h3 class="item__title" id="t-${item.id}">${openButton(item, label)}</h3>${priceHtml}</div>`;
 }
 
 // ---------- hero ----------
@@ -148,10 +171,10 @@ export function heroBody(item, ctx) {
   const phrase = ctx.pick(ctx.model.extras.hero_phrase);
   return html`
     <p class="kicker">${ctx.t('signature')}</p>
-    <h2 class="hero__title" id="hero-t"${nameLang(item.title, ctx)}>${ctx.pick(item.title)}</h2>
+    <h2 class="hero__title" id="hero-t">${name(item.title, ctx)}</h2>
     ${item.subtitle ? html`<p class="hero__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     <p class="hero__desc clamp" id="d-hero">${ctx.pick(item.description)}</p>
-    <button class="more" type="button" aria-expanded="false" aria-controls="d-hero" data-js="expand">${ctx.t('more_toggle')}</button>
+    <button class="more" type="button" aria-expanded="false" aria-controls="d-hero" data-js="expand">${ctx.t('more_toggle')}${chevron()}</button>
     <div class="hero__buy">${price(item.priceCents, ctx, { cls: 'price--xl' })}${phrase ? html`<span class="sticker">${phrase}</span>` : ''}</div>
     <div class="hero__meta">${meta(item, ctx)}${tagList(item, ctx)}</div>`;
 }
@@ -168,7 +191,7 @@ export function teaser(model, ctx) {
 function signatureRow(item, ctx) {
   const badge = html`<li class="tag tag--sig">${ctx.t('signature_badge')}</li>`;
   return html`<article class="item item--sig" id="item-${item.id}" aria-labelledby="t-${item.id}">
-    ${rowHead(item, ctx, price(item.priceCents, ctx), false)}
+    ${rowHead(item, ctx, price(item.priceCents, ctx))}
     ${tagList(item, ctx, badge)}
     ${meta(item, ctx)}
     <a class="more" href="#qara">↑ ${ctx.t('more_above')}</a>
@@ -189,7 +212,7 @@ function dishRow(item, ctx) {
   const hasVariants = item.variants.length > 0;
   const priceHtml = hasVariants ? priceSpan(item.variants.map((v) => v.priceCents), ctx) : price(item.priceCents, ctx);
   return html`<article class="item" id="item-${item.id}" aria-labelledby="t-${item.id}">
-    ${rowHead(item, ctx, priceHtml, true)}
+    ${rowHead(item, ctx, priceHtml)}
     ${item.subtitle ? html`<p class="item__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     ${tagList(item, ctx)}
     <p class="item__desc clamp" id="d-${item.id}">${ctx.pick(item.description)}</p>
@@ -199,12 +222,13 @@ function dishRow(item, ctx) {
   </article>`;
 }
 
+/** Extras with options: a small "option · price" table, then one allergen line per option. */
 function lineVariants(item, ctx, sign) {
   if (!item.variants.length) return '';
-  const own = ownAllergens(item);
+  const own = ownAllergens(item) ? item.variants.filter((v) => v.allergens?.length) : [];
   return html`<ul class="line__vars" role="list">${item.variants.map((v) => html`<li class="line__var">
-    <span>${ctx.pick(v.name)}</span>${price(v.priceCents, ctx, { sign })}
-    ${v.spicyLevel ? spice(v.spicyLevel, ctx, false) : ''}${own ? allergenList(v.allergens, ctx) : ''}</li>`)}</ul>`;
+    <span>${ctx.pick(v.name)}${v.spicyLevel ? html` ${spice(v.spicyLevel, ctx, false)}` : ''}</span>${price(v.priceCents, ctx, { sign })}</li>`)}</ul>
+    ${own.map((v) => html`<p class="meta">${allergenList(v.allergens, ctx, ctx.pick(v.name))}</p>`)}`;
 }
 
 /** Extras and drinks: same number field as dishes, no paragraphs; extras get "+price". */
@@ -213,7 +237,7 @@ function line(item, ctx) {
   const prices = item.variants.length ? item.variants.map((v) => v.priceCents) : [item.priceCents];
   const priceHtml = priceSpan(prices, ctx, { sign, cls: sign ? 'price--add' : '' });
   return html`<article class="item item--line" id="item-${item.id}" aria-labelledby="t-${item.id}">
-    ${rowHead(item, ctx, priceHtml, false)}
+    ${rowHead(item, ctx, priceHtml)}
     <p class="item__sub">${item.icon ? icon(item.icon, 'item__icon') : ''}${ctx.pick(item.description)}</p>
     ${meta(item, ctx, { size: item.volumeMl !== null, allergens: !(item.variants.length && ownAllergens(item)) })}
     ${lineVariants(item, ctx, sign)}
@@ -256,7 +280,7 @@ function availability(item, ctx) {
 function setCard(item, ctx, isFeature) {
   return html`<article class="set${isFeature ? ' set--feature' : ''}" id="item-${item.id}" aria-labelledby="t-${item.id}">
     <div class="set__top"><span class="set__no" aria-hidden="true">${item.number}</span>${tagList(item, ctx)}</div>
-    <h3 class="set__title" id="t-${item.id}"${nameLang(item.title, ctx)}><span class="u-vh">${item.number} </span>${ctx.pick(item.title)}</h3>
+    <h3 class="set__title" id="t-${item.id}">${openButton(item, name(item.title, ctx, item.number), 'set__open')}</h3>
     ${item.subtitle ? html`<p class="set__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     ${formula(item.set, ctx)}
     ${choices(item.set, ctx)}
@@ -265,6 +289,56 @@ function setCard(item, ctx, isFeature) {
     ${setPricing(item, ctx)}
     ${meta(item, ctx, { size: false })}
   </article>`;
+}
+
+// ---------- details sheet ----------
+
+/** Which line icon stands in for the photo until real ones are shot (no stock photos: legal). */
+function placeholderIcon(item) {
+  if (item.isSet) return 'set';
+  if (item.icon) return item.icon;
+  if (item.isAddon) return 'sauce';
+  if (item.volumeMl) return 'cup';
+  return item.id.startsWith('fries') ? 'fries' : 'durum';
+}
+
+function photo(item, ctx) {
+  if (item.image) {
+    return html`<img class="sheet__img" src="${item.image}" alt="${ctx.pick(item.title)}" width="800" height="600" decoding="async">`;
+  }
+  return html`<div class="ph" role="img" aria-label="${ctx.t('photo_soon')}">
+    <svg class="ph__ic" aria-hidden="true" focusable="false"><use href="#i-${placeholderIcon(item)}"/></svg>
+    <svg class="mark ph__mark" aria-hidden="true" focusable="false"><use href="#mark"/></svg>
+    <span class="ph__note" aria-hidden="true">${ctx.t('photo_soon')}</span></div>`;
+}
+
+/** Everything about one item: photo, full text, every price, allergens, the combo hint. */
+export function detailSheet(item, ctx) {
+  const sign = item.isAddon ? '+' : '';
+  const pricing = item.isSet
+    ? setPricing(item, ctx)
+    : item.variants.length
+      ? html`<ul class="line__vars sheet__vars" role="list">${item.variants.map((v) => html`<li class="line__var">
+          <span>${ctx.pick(v.name)}${v.weightG ? html` <small>${sizeOf({ weightG: v.weightG }, ctx)}</small>` : ''}</span>${price(v.priceCents, ctx, { sign })}</li>`)}</ul>`
+      : price(item.priceCents, ctx, { cls: 'price--l', sign });
+  return html`<div class="sheet__panel" data-js="sheet-panel">
+    <span class="sheet__grab" aria-hidden="true"></span>
+    <button class="sheet__close" type="button" data-js="close" aria-label="${ctx.t('close')}">×</button>
+    <div class="sheet__media" data-js="sheet-drag">${photo(item, ctx)}</div>
+    <div class="sheet__body">
+      <p class="sheet__no" aria-hidden="true">${displayNo(item.number)}</p>
+      <h2 class="sheet__title" id="sheet-t">${name(item.title, ctx)}</h2>
+      ${item.subtitle ? html`<p class="sheet__sub">${ctx.pick(item.subtitle)}</p>` : ''}
+      ${tagList(item, ctx)}
+      <div class="sheet__price">${pricing}</div>
+      ${item.isSet ? html`${formula(item.set, ctx)}${choices(item.set, ctx)}` : ''}
+      <p class="sheet__desc">${ctx.pick(item.fullDescription)}</p>
+      ${availability(item, ctx)}
+      ${meta(item, ctx, { size: !item.variants.length })}
+      ${item.variants.length && ownAllergens(item)
+        ? item.variants.filter((v) => v.allergens?.length).map((v) => html`<p class="meta">${allergenList(v.allergens, ctx, ctx.pick(v.name))}</p>`) : ''}
+      ${upsell(item, ctx)}
+    </div></div>`;
 }
 
 // ---------- sections ----------
@@ -341,6 +415,7 @@ export function actionBar(contact, ctx) {
 export function renderApp(model, ctx) {
   return {
     'demo-text': model.isDemo ? ctx.t('demo_short') : '',
+    offline: model.offline ? fill(ctx.t('offline_note'), { date: formatDate(model.updatedAt || '', ctx.lang) || model.version }) : '',
     welcome: ctx.pick(model.extras.welcome),
     'hero-body': model.hero ? heroBody(model.hero, ctx) : '',
     teaser: teaser(model, ctx),

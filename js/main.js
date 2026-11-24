@@ -1,14 +1,15 @@
 // Composition root: owns state and the DOM (render, language, scroll-spy, motion hooks).
-import { LANGS, loadMenu, createContext } from './model.js?v=2026-11-24-r2';
-import { mount, renderApp, errorState } from './views.js?v=2026-11-24-r2';
+import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r4';
+import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r4';
 
+const BUILD = '2026-11-25-r4'; // = <html data-build>, set by tools/bump_version.py
 // Shown before or without menu.json, so they cannot live in its "ui" block.
 const OFFLINE_STRINGS = {
   az: { page: 'Black Calf — Menyu', skip: 'Menyuya keç', loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', empty: 'Menyu müvəqqəti əlçatan deyil. Kassada soruşun.', retry: 'Yenidən cəhd et' },
   ru: { page: 'Black Calf — Меню', skip: 'Перейти к меню', loading: 'Загружается…', title: 'Меню не загрузилось', text: 'Проверьте интернет или спросите на кассе.', empty: 'Меню временно недоступно. Спросите на кассе.', retry: 'Повторить' },
   en: { page: 'Black Calf — Menu', skip: 'Skip to menu', loading: 'Loading…', title: "The menu didn't load", text: 'Check your connection or ask at the counter.', empty: 'The menu is temporarily unavailable. Please ask at the counter.', retry: 'Try again' },
 };
-const STORAGE_KEY = 'bc-lang';
+const MOUNTS = ['menu', 'catnav', 'hero', 'hero-body', 'teaser', 'foot', 'actions', 'lang', 'stamp', 'demo', 'demo-text', 'welcome', 'offline', 'h1', 'skip'];
 const SLOW_MS = 4000;
 
 const root = document.documentElement;
@@ -23,7 +24,23 @@ const state = { lang: LANGS.includes(root.lang) ? root.lang : 'az', model: null,
 const timers = { intro: 0, stamp: 0, slow: 0 };
 let spy = null;
 let setObserver = null;
+let navHeight = 0;
 const seenSets = new Set();
+
+// ---------- release safety: an HTML page from the HTTP cache may meet newer JS ----------
+
+const shellIsStale = () => root.dataset.build !== BUILD || MOUNTS.some((name) => !$(name));
+
+/** Refresh page + data past the HTTP cache once per build, then reload. false = already tried. */
+function reloadFresh() {
+  try {
+    if (sessionStorage.getItem('bc-fresh') === BUILD) return false;
+    sessionStorage.setItem('bc-fresh', BUILD);
+  } catch { return false; }
+  Promise.allSettled([fetch(location.href, { cache: 'reload' }), fetch(`menu.json?v=${BUILD}`, { cache: 'reload' })])
+    .then(() => location.reload());
+  return true;
+}
 
 // ---------- render ----------
 
@@ -41,19 +58,17 @@ function render() {
 
 function setChrome(title, skip) {
   document.title = title;
-  $('h1').textContent = title;
-  $('skip').textContent = skip;
+  [['h1', title], ['skip', skip]].forEach(([name, text]) => { if ($(name)) $(name).textContent = text; });
 }
 
 function syncLangSwitch() {
-  const group = $('lang');
-  group.querySelectorAll('button').forEach((button) => {
+  $('lang').querySelectorAll('button').forEach((button) => {
     button.setAttribute('aria-pressed', String(button.dataset.lang === state.lang));
   });
 }
 
 function storeLang(lang) {
-  try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* private mode: keep it for this visit only */ }
+  try { localStorage.setItem('bc-lang', lang); } catch { /* private mode */ }
 }
 
 /** Keeps the same row under the sticky nav across a re-render (BA AC-01.7). */
@@ -77,12 +92,13 @@ function setLang(next) {
   storeLang(next);
   syncLangSwitch();
   const update = () => {
-    root.lang = next; // switches the font subset, AZ-correct uppercasing (i → İ) and the language pill
+    root.lang = next; // font subset, AZ uppercasing (i → İ) and the language pill follow html[lang]
     if (state.error) return showError(state.error);
     if (!state.model) return;
     const anchor = captureAnchor();
     render();
     restoreAnchor(anchor);
+    if (sheet?.open) fillSheet();
   };
   endIntro();
   if (document.startViewTransition && canAnimate()) document.startViewTransition(update);
@@ -94,18 +110,26 @@ function setLang(next) {
 function observeSections() {
   if (spy) spy.disconnect();
   const nav = $('catnav');
-  const navHeight = nav.offsetHeight;
-  root.style.setProperty('--nav-h', `${navHeight}px`); // the nav may wrap on desktop
-  if (!('IntersectionObserver' in window)) return; // links still work as plain anchors
+  navHeight = nav.offsetHeight;
+  root.style.setProperty('--nav-h', `${navHeight}px`);
+  if (!('IntersectionObserver' in window)) return;
   const links = new Map(Array.from(nav.querySelectorAll('a'), (link) => [link.hash.slice(1), link]));
   const visible = new Set();
   spy = new IntersectionObserver((entries) => {
     entries.forEach((entry) => (entry.isIntersecting ? visible.add(entry.target.id) : visible.delete(entry.target.id)));
     let id = null;
-    for (const key of links.keys()) if (visible.has(key)) id = key; // the lowest section in the band is the one being read
+    for (const key of links.keys()) if (visible.has(key)) id = key; // lowest section in the band = being read
     if (id) setActiveLink(nav, links.get(id));
-  }, { rootMargin: `-${navHeight + 2}px 0px -55% 0px` }); // +2: a section merely touching the nav edge is not "current"
+  }, { rootMargin: `-${navHeight + 2}px 0px -55% 0px` }); // +2: touching the nav edge is not "current"
   document.querySelectorAll('.cat').forEach((section) => spy.observe(section));
+}
+
+/** The nav wraps on wide screens: re-measure when its height changes (resize, font swap). */
+function watchNavHeight() {
+  if (!('ResizeObserver' in window)) return;
+  new ResizeObserver(([entry]) => {
+    if (state.model && entry.target.offsetHeight !== navHeight) observeSections();
+  }).observe($('catnav'));
 }
 
 function setActiveLink(nav, link) {
@@ -115,13 +139,13 @@ function setActiveLink(nav, link) {
   const outOfView = left < strip.scrollLeft || left + link.offsetWidth > strip.scrollLeft + strip.clientWidth;
   nav.querySelectorAll('[aria-current]').forEach((other) => other.removeAttribute('aria-current'));
   link.setAttribute('aria-current', 'true');
-  // scrollTo on the strip only: scrollIntoView would also move the page
+  // scroll the strip only: scrollIntoView would move the page too
   if (outOfView) strip.scrollTo({ left: Math.max(0, left - 16), behavior: canAnimate() ? 'smooth' : 'auto' });
 }
 
 // ---------- motion hooks (visuals live in CSS) ----------
 
-/** The stamp scene starts at first paint (inline script sets html.is-intro); here we only end it. */
+/** The scene starts at first paint (inline script sets html.is-intro); here it only ends. */
 function endIntro() {
   clearTimeout(timers.intro);
   root.classList.remove('is-intro');
@@ -137,15 +161,15 @@ function restamp() {
   timers.stamp = setTimeout(() => stamp.classList.remove('is-stamping'), cssMs('--stamp-ms'));
 }
 
-/** Only content that starts below the first screen may fade in; what the guest already sees stays put. */
+/** Only content below the first screen may fade in. */
 function markReveal() {
   if (!canAnimate()) return;
   const fold = window.innerHeight;
-  const below = Array.from(document.querySelectorAll('.set, .cat__head')).filter((el) => el.getBoundingClientRect().top > fold);
+  const below = Array.from(document.querySelectorAll('.set, .cat__head, .item')).filter((el) => el.getBoundingClientRect().top > fold);
   below.forEach((el) => el.classList.add('reveal'));
 }
 
-/** Savings strike + stamp, once per set, when the price block itself is fully in view. */
+/** Savings strike + stamp, once per set. 0.6 rather than 1: WebKit may report 0.99 for a fully visible block. */
 function armSets() {
   if (setObserver) setObserver.disconnect();
   if (!canAnimate() || !('IntersectionObserver' in window)) return;
@@ -155,7 +179,7 @@ function armSets() {
     card.classList.add('is-seen');
     seenSets.add(card.id);
     setObserver.unobserve(entry.target);
-  }), { threshold: 1, rootMargin: '0px 0px -15% 0px' });
+  }), { threshold: 0.6, rootMargin: '0px 0px -15% 0px' });
   const fold = window.innerHeight;
   const blocks = Array.from(document.querySelectorAll('.set__price'))
     .filter((block) => block.querySelector('.save') && !seenSets.has(block.closest('.set').id))
@@ -166,6 +190,102 @@ function armSets() {
   });
 }
 
+// ---------- details sheet: native <dialog> (focus trap, Esc, top layer) ----------
+
+const SWIPE_CLOSE_PX = 90;
+let sheet = null;
+let sheetItemId = null;
+
+function findItem(id) {
+  for (const category of state.model?.categories || []) {
+    const item = category.items.find((it) => it.id === id);
+    if (item) return item;
+  }
+  return state.model?.hero?.id === id ? state.model.hero : null;
+}
+
+function ensureSheet() {
+  if (sheet) return sheet;
+  sheet = document.createElement('dialog');
+  sheet.className = 'sheet';
+  sheet.setAttribute('aria-labelledby', 'sheet-t');
+  sheet.addEventListener('cancel', (event) => { event.preventDefault(); requestCloseSheet(); }); // Esc
+  sheet.addEventListener('click', (event) => {
+    if (event.target === sheet || event.target.closest('[data-js="close"]')) requestCloseSheet(); // backdrop or ×
+  });
+  wireSwipe(sheet);
+  document.body.append(sheet);
+  return sheet;
+}
+
+function fillSheet() {
+  const item = findItem(sheetItemId);
+  if (item) mount(sheet, detailSheet(item, createContext(state.model, state.lang)));
+}
+
+function openSheet(id) {
+  if (!findItem(id)) return;
+  ensureSheet();
+  const replacing = sheet.open;
+  sheetItemId = id;
+  fillSheet();
+  sheet.classList.remove('is-closing');
+  if (!replacing) {
+    sheet.showModal();
+    root.classList.add('has-sheet'); // iOS: <dialog> alone does not stop the page from scrolling
+    history.pushState({ bcSheet: id }, ''); // the phone's Back closes the sheet, not the menu
+  } else {
+    sheet.querySelector('[data-js="sheet-panel"]').scrollTop = 0;
+  }
+  sheet.querySelector('[data-js="close"]').focus();
+}
+
+/** Every close goes through history so Back, ×, Esc, backdrop and swipe behave the same. */
+function requestCloseSheet() {
+  if (history.state?.bcSheet) history.back();
+  else closeSheet();
+}
+
+function closeSheet() {
+  if (!sheet?.open) return;
+  const opener = document.querySelector(`[data-js="open"][data-id="${sheetItemId}"]`);
+  const finish = () => {
+    sheet.close();
+    sheet.classList.remove('is-closing');
+    root.classList.remove('has-sheet');
+    opener?.focus({ preventScroll: true });
+  };
+  if (!canAnimate()) return finish();
+  sheet.classList.add('is-closing');
+  setTimeout(finish, cssMs('--sheet-out-ms'));
+}
+
+/** Drag the photo area down to close; under the threshold it springs back (CSS transition). */
+function wireSwipe(dialog) {
+  let startY = null;
+  let panel = null;
+  dialog.addEventListener('pointerdown', (event) => {
+    if (!event.target.closest('[data-js="sheet-drag"]')) return;
+    panel = dialog.querySelector('[data-js="sheet-panel"]');
+    startY = event.clientY;
+    panel.classList.add('is-dragging');
+  });
+  dialog.addEventListener('pointermove', (event) => {
+    if (startY === null) return;
+    panel.style.transform = `translateY(${Math.max(0, event.clientY - startY)}px)`;
+  });
+  const end = (event) => {
+    if (startY === null) return;
+    const dy = event.clientY - startY;
+    startY = null;
+    panel.classList.remove('is-dragging');
+    panel.style.transform = '';
+    if (dy > SWIPE_CLOSE_PX) requestCloseSheet();
+  };
+  dialog.addEventListener('pointerup', end);
+  dialog.addEventListener('pointercancel', end);
+}
+
 function toggleExpand(button) {
   const open = button.getAttribute('aria-expanded') !== 'true';
   button.setAttribute('aria-expanded', String(open));
@@ -174,19 +294,15 @@ function toggleExpand(button) {
 
 // ---------- boot ----------
 
-function reportWarnings(warnings) {
-  if (isDebug) warnings.forEach((warning) => console.warn(`[menu] ${warning}`));
-}
-
 function showError(error) {
   const strings = OFFLINE_STRINGS[state.lang];
   state.error = error;
-  $('hero').hidden = true;
-  $('catnav').hidden = true;
+  ['hero', 'catnav', 'teaser'].forEach((name) => { if ($(name)) $(name).hidden = true; });
   setChrome(strings.page, strings.skip);
-  const message = error.message === 'empty' ? { ...strings, text: strings.empty } : strings;
-  mount($('menu'), errorState(message));
-  $('error-title').focus();
+  // only a failed download is "check your connection"; data or code problems get the neutral text
+  const network = error instanceof MenuLoadError && error.message !== 'empty';
+  mount($('menu'), errorState(network ? strings : { ...strings, text: strings.empty }));
+  $('error-title')?.focus();
 }
 
 async function boot() {
@@ -194,14 +310,15 @@ async function boot() {
   clearTimeout(timers.slow);
   if (status) timers.slow = setTimeout(() => { status.textContent = OFFLINE_STRINGS[state.lang].loading; }, SLOW_MS);
   try {
-    const { model, warnings } = await loadMenu('menu.json');
-    reportWarnings(warnings);
+    const { model, warnings } = await loadMenu(`menu.json?v=${BUILD}`);
+    if (isDebug) warnings.forEach((warning) => console.warn(`[menu] ${warning}`));
     state.model = model;
     state.error = null;
     render();
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: 'instant' });
   } catch (error) {
     if (isDebug) console.warn('[menu] load failed:', error.message);
+    if (!(error instanceof MenuLoadError) && reloadFresh()) return; // a render bug may be a version mix
     showError(error);
   } finally {
     clearTimeout(timers.slow);
@@ -219,27 +336,38 @@ function wireEvents() {
     if (link) setActiveLink($('catnav'), link); // immediate feedback; the spy confirms on arrival
   });
   document.addEventListener('click', (event) => {
+    const opener = event.target.closest('[data-js="open"]');
+    if (opener && state.model) {
+      event.preventDefault();
+      return openSheet(opener.dataset.id);
+    }
     const expand = event.target.closest('[data-js="expand"]');
     if (expand) toggleExpand(expand);
     if (!event.target.closest('[data-js="retry"]')) return;
-    $('hero').hidden = false;
-    $('catnav').hidden = false;
+    ['hero', 'catnav', 'teaser'].forEach((name) => { $(name).hidden = false; });
     boot();
   });
-  // lets :active fire on iOS Safari
-  document.addEventListener('touchstart', () => {}, { passive: true });
+  document.addEventListener('touchstart', () => {}, { passive: true }); // lets :active fire on iOS
+  addEventListener('popstate', () => { if (!history.state?.bcSheet) closeSheet(); });
 }
 
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
-  // after load, so it never competes with the first render
-  const register = () => navigator.serviceWorker.register('sw.js').catch(() => { /* site works without it */ });
+  const register = () => navigator.serviceWorker.register('sw.js').catch(() => {});
   if (document.readyState === 'complete') register();
-  else addEventListener('load', register, { once: true });
+  else addEventListener('load', register, { once: true }); // never competes with the first render
 }
 
-if (root.classList.contains('is-intro')) timers.intro = setTimeout(endIntro, cssMs('--intro-ms'));
-syncLangSwitch();
-wireEvents();
-boot();
-registerServiceWorker();
+function start() {
+  if (root.classList.contains('is-intro')) timers.intro = setTimeout(endIntro, cssMs('--intro-ms'));
+  syncLangSwitch();
+  wireEvents();
+  watchNavHeight();
+  boot();
+  registerServiceWorker();
+}
+
+if (!(shellIsStale() && reloadFresh())) {
+  if (shellIsStale()) showError(new MenuLoadError('empty')); // reload did not help: say so, never crash
+  else start();
+}

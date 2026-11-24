@@ -1,0 +1,4 @@
+/* v1 -> v2 bridge: keeps the stale v1 shell dark and quiet for the moment before app.js redirects. */
+html { background: #151311; color: #F3EADB; font: 16px/1.5 system-ui, sans-serif; }
+body > :not(main) { display: none; }
+main { padding: 40vh 0 0; text-align: center; }

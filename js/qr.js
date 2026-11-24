@@ -1,5 +1,5 @@
 // qr.html: printable QR cards. Uses the vendored qrcode-generator (global `qrcode`, loaded with defer before this module).
-import { html, mount } from './views.js?v=2026-11-24-r2';
+import { html, mount } from './views.js?v=2026-11-25-r4';
 
 const MAX_CARDS = 12;
 const form = document.querySelector('[data-js="form"]');

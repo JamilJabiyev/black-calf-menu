@@ -49,16 +49,31 @@ export function formatSize({ weightG, volumeMl }, units, lang) {
 
 const TIMEOUT_MS = 10000;
 
-/** Default fetch cache mode, so the <link rel=preload> response is reused. */
+const SCHEMA = 2;
+const isCurrent = (raw) => raw?.schema_version === SCHEMA && raw.ui;
+
+async function getJson(url, cache, signal) {
+  const response = await fetch(url, { cache, signal });
+  if (!response.ok) throw new MenuLoadError(`HTTP ${response.status}`);
+  try {
+    return { raw: await response.json(), offline: response.headers.get('x-bc-offline') === '1' };
+  } catch { throw new MenuLoadError('invalid JSON'); }
+}
+
+/**
+ * First the default cache mode (reuses the <link rel=preload>); a file from an older schema
+ * (HTTP-cached during a release) is fetched once more past the cache.
+ */
 export async function loadMenu(url = 'menu.json') {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new MenuLoadError(`HTTP ${response.status}`);
-    let raw;
-    try { raw = await response.json(); } catch { throw new MenuLoadError('invalid JSON'); }
-    return buildMenuModel(raw);
+    let got = await getJson(url, 'default', controller.signal);
+    if (!isCurrent(got.raw)) got = await getJson(url, 'reload', controller.signal);
+    if (!isCurrent(got.raw)) throw new MenuLoadError('empty');
+    const result = buildMenuModel(got.raw);
+    result.model.offline = got.offline; // served by sw.js from its cache: show "version of …"
+    return result;
   } catch (error) {
     throw error instanceof MenuLoadError ? error : new MenuLoadError(error.message);
   } finally {
@@ -98,6 +113,7 @@ export function buildMenuModel(raw) {
     model: {
       brand: raw.brand || 'Black Calf',
       version: raw.version || '',
+      updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(raw.updated_at || '') ? raw.updated_at : null,
       isDemo: raw.is_demo === true,
       hero: visible.flatMap((category) => category.items).find((item) => item.isHero) || null,
       teaser: setTeaser(visible),
@@ -135,6 +151,9 @@ function normalizeItem(raw, legend, warnings) {
     number: String(raw.number ?? ''),
     ...splitName(raw.name, raw.subtitle),
     description: raw.short_description || raw.description || {},
+    fullDescription: raw.description || raw.short_description || {},
+    // own photos only (legal: real portions): a relative img/ path, never a URL from the data
+    image: /^img\/[\w.-]+\.(webp|avif|jpe?g|png)$/i.test(raw.image || '') ? raw.image : null,
     priceCents,
     isAddon: raw.is_addon === true,
     isHero: tags.includes('hero'),
@@ -305,7 +324,10 @@ function addUpsells(items, index) {
     const choice = resolveRef(ref, index);
     const delta = choice && combo.priceCents - choice.priceCents;
     if (delta > 0 && !choice.item.upsell) {
-      choice.item.upsell = { kind: 'combo', targetId: combo.id, label: combo.number, deltaCents: delta, variant: choice.variant?.name || null };
+      choice.item.upsell = {
+        kind: 'combo', targetId: combo.id, label: combo.number, deltaCents: delta, variant: choice.variant?.name || null,
+        parts: combo.set.parts.filter((part) => part.key !== 'durum'), // what the guest gets for the difference
+      };
     }
   });
   const sauce = items.find((item) => partOf(item.id) === 'sauce');

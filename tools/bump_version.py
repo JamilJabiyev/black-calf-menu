@@ -3,7 +3,7 @@
 
     python3 tools/bump_version.py 2026-12-01-r1
 
-Updates VERSION in sw.js and every ?v= in index.html, qr.html and js/*.js.
+Updates VERSION in sw.js, BUILD in main.js, <html data-build> and every ?v= in index.html, qr.html and js/*.js.
 tools/check.py fails if they ever disagree.
 """
 import pathlib
@@ -22,7 +22,8 @@ def main():
         path = ROOT / name
         text = path.read_text(encoding="utf-8")
         new = re.sub(r"\?v=[0-9A-Za-z.-]+", "?v=" + version, text)
-        new = re.sub(r"const VERSION = '[^']+';", f"const VERSION = '{version}';", new)
+        new = re.sub(r"const (VERSION|BUILD) = '[^']+';", lambda m: f"const {m.group(1)} = '{version}';", new)
+        new = re.sub(r'data-build="[^"]+"', f'data-build="{version}"', new)
         if new != text:
             path.write_text(new, encoding="utf-8")
             print("updated", name)

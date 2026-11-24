@@ -78,6 +78,7 @@
 
     /* motion: the single source of durations; main.js reads --intro-ms and --stamp-ms */
     --intro-ms: 1900ms;
+    --sheet-out-ms: 220ms;
     --stamp-ms: 1400ms;
     --ease-out: cubic-bezier(.16, 1, .3, 1);
     --ease-std: cubic-bezier(.2, 0, 0, 1);
@@ -485,6 +486,59 @@
     .catnav a:hover, .lang button[aria-pressed="false"]:hover { color: var(--color-text); }
   }
 
+  /* ---------- tap anywhere on a card opens its sheet; links inside stay on top ---------- */
+  .set { position: relative; }
+  .set__open { text-align: start; text-transform: inherit; letter-spacing: inherit; font: inherit; color: inherit; }
+  .set__open::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  .item__toggle .chev, .set__open .chev { rotate: -90deg; opacity: .55; margin-inline-start: 6px; font-size: .7em; vertical-align: middle; }
+  :is(.item, .set) :is(a, .variants, .line__vars) { position: relative; z-index: 1; }
+
+  /* ---------- details sheet (native <dialog>; slides up on phones, centred card on wide screens) ---------- */
+  html.has-sheet { overflow: hidden; }
+  .sheet {
+    position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+    margin: 0; padding: 0; border: 0; background: transparent; color: var(--color-text);
+  }
+  .sheet[open] { display: flex; align-items: flex-end; justify-content: center; }
+  .sheet::backdrop { background: rgb(8 6 5 / .7); }
+  .sheet__panel {
+    position: relative; width: min(100%, 560px); max-height: 92svh; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--color-surface-1); border-radius: var(--radius-l) var(--radius-l) 0 0;
+    box-shadow: 0 -1px 0 var(--color-line-strong); padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+    transition: transform 320ms var(--ease-out);
+  }
+  .sheet__panel.is-dragging { transition: none; }
+  @media (min-width: 720px) {
+    .sheet[open] { align-items: center; }
+    .sheet__panel { border-radius: var(--radius-l); max-height: 88vh; }
+    .sheet__grab { display: none; }
+  }
+  .sheet__grab { position: absolute; top: var(--space-2); left: 50%; translate: -50% 0; z-index: 2; width: 40px; height: 5px; border-radius: 3px; background: rgb(243 234 219 / .45); }
+  .sheet__close {
+    position: absolute; top: var(--space-3); right: var(--space-3); z-index: 2; width: 44px; height: 44px;
+    border: 0; border-radius: 50%; background: rgb(8 6 5 / .55); color: var(--color-text); font-size: 26px; line-height: 1;
+  }
+  .sheet__media { touch-action: none; cursor: grab; } /* swipe-down handle */
+  .sheet__img, .ph { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .ph {
+    position: relative; display: grid; place-items: center; overflow: hidden;
+    background:
+      repeating-linear-gradient(-28deg, transparent 0 22px, rgb(243 234 219 / .025) 22px 24px),
+      radial-gradient(60% 55% at 50% 48%, rgb(232 87 42 / .32), transparent 72%),
+      var(--color-bg-deep);
+  }
+  .ph__ic { width: 34%; height: auto; aspect-ratio: 1; fill: none; stroke: var(--color-accent); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+  .ph__mark { position: absolute; right: var(--space-4); bottom: var(--space-4); width: 44px; height: 44px; color: var(--color-text-3); }
+  .ph__note { position: absolute; left: var(--space-4); bottom: var(--space-4); font-size: 12px; color: var(--color-text-3); letter-spacing: .04em; }
+  .sheet__body { display: grid; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-2); }
+  .sheet__no { font-family: var(--font-display); font-size: 14px; color: var(--color-accent-text); }
+  .sheet__title { font-family: var(--font-display); font-size: clamp(30px, 10vw, 44px); line-height: .95; text-transform: uppercase; }
+  .sheet__sub { color: var(--color-text-2); font-weight: 700; margin-top: calc(var(--space-2) * -1); }
+  .sheet__desc { color: var(--color-text); font-size: 16px; line-height: 1.55; }
+  .sheet__price .price--l { font-size: 34px; }
+  .sheet__vars small { color: var(--color-text-3); font-size: 12px; }
+  .sheet__body > .upsell, .sheet__body > .chip { justify-self: start; }
+
   /* ---------- states ---------- */
   .state { display: grid; justify-items: center; gap: var(--space-3); max-width: 36ch; margin: var(--space-16) auto; padding: 0 var(--gutter); text-align: center; }
   .state .mark { width: 56px; height: 56px; color: var(--color-text-3); }
@@ -543,6 +597,22 @@
     .set.is-armed.is-seen .set__was s::after { animation: bc-strike 280ms var(--ease-out) 120ms both; }
     .set.is-armed.is-seen .save { animation: bc-stamp-pop 560ms var(--spring) 360ms both; }
 
+    /* cards: press-in on tap, lift on hover (desktop) */
+    .item, .set { transition: transform 420ms var(--spring), background-color 200ms var(--ease-std); }
+    .item:has(.item__toggle:active), .set:has(.set__open:active) { transform: scale(.985); transition-duration: 90ms; }
+    @media (hover: hover) { .set:hover { transform: translateY(-3px); } }
+
+    /* details sheet: springs up, content follows in a short stagger, photo icon pops; closes faster than it opens */
+    .sheet[open] .sheet__panel { animation: bc-sheet-up 460ms var(--spring); }
+    .sheet[open]::backdrop { animation: bc-fade 280ms var(--ease-std); }
+    .sheet.is-closing .sheet__panel { animation: bc-sheet-down var(--sheet-out-ms) var(--ease-press) forwards; }
+    .sheet.is-closing::backdrop { animation: bc-fade var(--sheet-out-ms) var(--ease-std) reverse forwards; }
+    .sheet[open] .ph__ic { animation: bc-pop 620ms var(--spring) 140ms both; }
+    .sheet[open] .ph__mark { animation: bc-stick 520ms var(--spring) 260ms both; }
+    .sheet[open] .sheet__body > * { animation: bc-in 380ms var(--ease-out) both; animation-delay: calc(120ms + var(--k, 0) * 45ms); }
+    .sheet__body > :nth-child(2) { --k: 1; } .sheet__body > :nth-child(3) { --k: 2; } .sheet__body > :nth-child(4) { --k: 3; }
+    .sheet__body > :nth-child(5) { --k: 4; } .sheet__body > :nth-child(n+6) { --k: 5; }
+
     /* scroll-driven reveal, only for what started below the fold (main.js adds .reveal); finishes early, never below 40 % */
     @supports (animation-timeline: view()) {
       .reveal { animation: bc-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 35%; }
@@ -572,6 +642,15 @@
   @keyframes bc-strike { from { transform: scaleX(0); } }
   @keyframes bc-stamp-pop { from { opacity: 0; transform: scale(1.6) rotate(-12deg); } to { opacity: 1; transform: rotate(-3deg); } }
   @keyframes bc-rise { from { opacity: .4; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes bc-sheet-up { from { transform: translateY(100%); } }
+  @keyframes bc-sheet-down { to { transform: translateY(100%); } }
+  @keyframes bc-fade { from { opacity: 0; } }
+  @keyframes bc-pop { from { opacity: 0; transform: scale(.55) rotate(-10deg); } }
+  @keyframes bc-in { from { opacity: 0; transform: translateY(10px); } }
+  @media (min-width: 720px) {
+    @keyframes bc-sheet-up { from { opacity: 0; transform: translateY(24px) scale(.97); } }
+    @keyframes bc-sheet-down { to { opacity: 0; transform: translateY(16px) scale(.98); } }
+  }
 }
 
 @layer utilities {
