@@ -28,7 +28,7 @@ BUDGET = {
 }
 # Documented deviations awaiting a perf decision: key -> (hard ceiling, reason). Printed, never silent.
 EXCEPTIONS = {
-    "JS incl. sw.js": (14 * KB, "unminified source with why-comments (no build step); 11.5 KB without comments"),
+    "JS incl. sw.js": (16 * KB, "Jarvis round 2: unminified source, no build step (charter limit 25 KB)"),
 }
 PAGE_CSS = ["css/app.css"]
 PAGE_JS = ["js/main.js", "js/model.js", "js/views.js", "sw.js"]
@@ -121,6 +121,21 @@ def price_of(ref, index):
     return cents(item["price"])
 
 
+def allergens_of(ref, index):
+    item_id, _, variant_id = ref.partition(":")
+    item = index.get(item_id, {})
+    variant = next((v for v in item.get("variants", []) if v.get("id") == variant_id), {})
+    return set(variant["allergens"]) if "allergens" in variant else set(item.get("allergens") or [])
+
+
+def check_set_allergens(item, refs, choices, index):
+    """BA AC-06.7: a set lists the allergens of every possible choice."""
+    every = set(refs) | {ref for options in choices.values() for ref in options}
+    missing = set().union(*(allergens_of(ref, index) for ref in every)) - set(item.get("allergens") or [])
+    if missing:
+        fail(f"{item['id']}: allergens miss {sorted(missing)} from possible choices")
+
+
 def check_sets(index):
     for item in index.values():
         refs = item.get("set_items")
@@ -150,6 +165,7 @@ def check_sets(index):
         expected = [round((low - price) / 100, 2), round((high - price) / 100, 2)]
         if "savings_range" in item and [round(x, 2) for x in item["savings_range"]] != expected:
             fail(f"{item_id}: savings_range {item['savings_range']} != {expected}")
+        check_set_allergens(item, refs, choices, index)
         if low - price <= 0:
             fail(f"{item_id}: set is not cheaper for every choice")
         for ref in refs:
@@ -175,6 +191,21 @@ def check_ui(menu):
 
 # ---------- code ----------
 
+def check_versions(sw):
+    """sw.js VERSION and every ?v= must match, or a guest gets new HTML with old cached JS/CSS."""
+    match = re.search(r"const VERSION = '([^']+)'", sw)
+    version = match.group(1) if match else None
+    files = ["index.html", "qr.html"] + [str(p.relative_to(ROOT)) for p in sorted((ROOT / "js").glob("*.js"))]
+    for name in files:
+        for found in re.findall(r"\?v=([0-9A-Za-z.-]+)", (ROOT / name).read_text(encoding="utf-8")):
+            if found != version:
+                fail(f"{name}: ?v={found} but sw.js VERSION is {version} (run tools/bump_version.py)")
+    index_html = (ROOT / "index.html").read_text(encoding="utf-8")
+    for ref in ("css/app.css", "js/main.js", "js/model.js", "js/views.js"):
+        if f"{ref}?v=" not in index_html:
+            fail(f"index.html loads {ref} without ?v=")
+
+
 def check_code():
     page_files = ["index.html", "sw.js"] + PAGE_CSS + PAGE_JS
     for path in page_files:
@@ -191,13 +222,14 @@ def check_code():
         if sinks != allowed:
             fail(f"js/{path.name}: {sinks} innerHTML sinks (only views.js#mount may have one)")
     index_html = (ROOT / "index.html").read_text(encoding="utf-8")
-    for ref in re.findall(r'(?:href|src)="((?:css|js|fonts|assets)/[^"]+)"', index_html):
+    for ref in re.findall(r'(?:href|src)="((?:css|js|fonts|assets)/[^"?]+)', index_html):
         if not (ROOT / ref).exists():
             fail(f"index.html references missing file {ref}")
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    for ref in re.findall(r"'((?:css|js)/[^']+|menu\.json)'", sw):
+    for ref in re.findall(r"(?:css|js)/[\w.-]+\.(?:css|js)|menu\.json", sw.split("const FONTS")[0]):
         if not (ROOT / ref).exists():
             fail(f"sw.js precaches missing file {ref}")
+    check_versions(sw)
     for files in FONTS_BY_LANG.values():
         for font in files:
             if not (ROOT / font).exists():
@@ -214,13 +246,14 @@ def check_budget():
     js_b = sum(gz(p) for p in PAGE_JS)
     json_b = gz("menu.json")
     first = html_b + css_b + sum(gz(p) for p in PAGE_JS if p != "sw.js") + json_b
+    sw_b = gz("sw.js")  # downloaded after load, still part of the first visit
     rows = [("HTML (incl. inline SVG sprite)", html_b, BUDGET["html"]), ("CSS", css_b, BUDGET["css"]),
             ("JS incl. sw.js", js_b, BUDGET["js"]), ("menu.json", json_b, BUDGET["json"]),
             ("First screen without fonts", first, BUDGET["first_screen"])]
     for lang, files in FONTS_BY_LANG.items():
         size = sum((ROOT / f).stat().st_size for f in files)
         rows.append((f"Fonts {lang} ({len(files)} files)", size, BUDGET["fonts"]))
-        rows.append((f"Total first load {lang}", first + size, BUDGET["total"]))
+        rows.append((f"Total first visit {lang} (incl. sw.js)", first + sw_b + size, BUDGET["total"]))
         if len(files) > BUDGET["font_files"]:
             fail(f"fonts {lang}: {len(files)} files > {BUDGET['font_files']}")
     print("Budget (gzip -9 bytes):")

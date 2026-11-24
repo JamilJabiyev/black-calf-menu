@@ -16,11 +16,12 @@ css/app.css           all styles in @layer reset, tokens, base, layout, componen
 js/main.js            composition root: state, render, language, scroll-spy, motion hooks, SW registration
 js/model.js           pure data: language, money/size formatting, menu model, set price checks
 js/views.js           html`` template (escapes by default), safeUrl, mount, all components
-sw.js                 service worker: static cache-first, index + menu.json stale-while-revalidate
+sw.js                 service worker: versioned CSS/JS + fonts cache-first, page + menu.json network-first (2.5 s timeout)
 fonts/                self-hosted woff2 subsets (Unbounded 800 caps, Onest) + OFL.txt
 qr.html, js/qr.js, css/qr.css, js/vendor/   printable QR cards (vendored qrcode-generator 1.4.4, MIT)
 tools/check.py        checks before every commit
 tools/fetch_fonts.py  rebuilds the font subsets
+tools/bump_version.py sets one release version in sw.js and every ?v= (check.py verifies they match)
 ```
 
 ## Update the menu
@@ -28,7 +29,8 @@ tools/fetch_fonts.py  rebuilds the font subsets
 1. Edit `menu.json` (prices, names, descriptions, tags, allergens). Interface strings live in `ui`.
 2. Run `python3 tools/check.py`. It fails on invalid JSON, a set whose "separately"/savings do not match
    the real item prices, a missing translation, a non-whitelisted tag, or a budget overrun.
-3. On a release, bump `VERSION` in `sw.js` (and `version` in `menu.json`) so returning guests get the new files.
+3. When CSS/JS change, run `python3 tools/bump_version.py <new-version>`. Price-only edits to `menu.json` need
+   no bump: the page and `menu.json` are always fetched fresh first. Never rename a font file; add a new one.
 4. Commit and push to `main`. GitHub Pages updates in about a minute.
 
 Legal rules: Azerbaijani first; no "best / №1 / only" claims; only the tags `hit`, `new`, `spicy`, `veg` are ever
