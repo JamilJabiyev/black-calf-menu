@@ -1,8 +1,8 @@
 // Composition root: owns state and the DOM (render, language, scroll-spy, motion hooks).
-import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r5';
-import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r5';
+import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r6';
+import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r6';
 
-const BUILD = '2026-11-25-r5'; // = <html data-build>, set by tools/bump_version.py
+const BUILD = '2026-11-25-r6'; // = <html data-build>, set by tools/bump_version.py
 // Shown before or without menu.json, so they cannot live in its "ui" block.
 const OFFLINE_STRINGS = {
   az: { page: 'Black Calf — Menyu', skip: 'Menyuya keç', loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', empty: 'Menyu müvəqqəti əlçatan deyil. Kassada soruşun.', retry: 'Yenidən cəhd et' },

@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-25-r5';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r6';
 
 // ---------- safe templating ----------
 

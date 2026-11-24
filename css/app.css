@@ -26,29 +26,34 @@
 
 @layer tokens {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
     /* primitives: only referenced inside this layer */
     --coal-950: #0E0C0B; --coal-900: #151311; --coal-850: #1C1916; --coal-800: #24201C; --coal-700: #2E2924;
     --cream-100: #F3EADB; --cream-300: #D8CEBE; --cream-500: #B8AE9F;
     --ember-500: #E8572A; --ember-400: #F0683A; --saffron-400: #F2B33D; --chili-500: #EF4A3A; --leaf-500: #7FA650;
+    --kraft-200: #EBE0CE; --kraft-100: #F4ECDF; --kraft-50: #FBF6EE; --kraft-0: #FFFBF5; --kraft-300: #E3D6C1;
+    --ink-900: #1D1814; --ink-700: #4B4038; --ink-500: #6A5E54;
+    --ember-600: #CC4318; --ember-700: #B03A12; --gold-700: #8A5F00; --chili-600: #C8321F; --leaf-600: #4E7A2A;
 
-    /* semantic */
-    --color-bg: var(--coal-900);
-    --color-bg-deep: var(--coal-950);
-    --color-surface-1: var(--coal-850);
-    --color-surface-2: var(--coal-800);
-    --color-surface-3: var(--coal-700);
-    --color-line: rgb(243 234 219 / .10);
-    --color-line-strong: rgb(243 234 219 / .18);
-    --color-text: var(--cream-100);
-    --color-text-2: var(--cream-300);
-    --color-text-3: var(--cream-500);
-    --color-accent: var(--ember-500);       /* fills, icons, large type only */
-    --color-accent-text: var(--ember-400);  /* ember as body-size text (AA on bg and surface-2) */
-    --color-highlight: var(--saffron-400);  /* New, DEMO, focus ring */
-    --color-chili: var(--chili-500);
-    --color-leaf: var(--leaf-500);
-    --color-on-accent: var(--coal-900);
+    /* semantic — light "kraft paper" page (Jamil 2026-11-25: the all-black menu felt too dark) */
+    --color-bg: var(--kraft-100);
+    --color-bg-deep: var(--kraft-200);
+    --color-surface-1: var(--kraft-50);
+    --color-surface-2: var(--kraft-0);
+    --color-surface-3: var(--kraft-300);
+    --color-line: rgb(29 24 20 / .12);
+    --color-line-strong: rgb(29 24 20 / .22);
+    --color-text: var(--ink-900);
+    --color-text-2: var(--ink-700);
+    --color-text-3: var(--ink-500);           /* ≥ 4.5:1 on kraft-100 */
+    --color-accent: var(--ember-600);         /* fills, icons; white text on it ≥ 4.5:1 */
+    --color-accent-text: var(--ember-700);    /* ember as body-size text on kraft */
+    --color-highlight: var(--gold-700);       /* New tag text, focus ring */
+    --color-highlight-bg: var(--saffron-400); /* DEMO strip, DEMO badge */
+    --color-on-highlight: var(--ink-900);
+    --color-chili: var(--chili-600);
+    --color-leaf: var(--leaf-600);
+    --color-on-accent: var(--kraft-0);
 
     --font-display: "BC Display", "BC Text", "BC Display Fallback", system-ui, sans-serif;
     --font-text: "BC Text", "BC Text Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -73,7 +78,7 @@
     --tap: 44px;
     --nav-h: 49px; /* main.js overwrites it with the measured height */
     --stamp-size: min(32vw, 190px);
-    --shadow-card: inset 0 1px 0 rgb(243 234 219 / .06);
+    --shadow-card: 0 6px 14px -10px rgb(29 24 20 / .28);
     --ring-ember: inset 0 0 0 1px rgb(232 87 42 / .35);
 
     /* motion: the single source of durations; main.js reads --intro-ms and --stamp-ms */
@@ -97,8 +102,22 @@
         .969 40%, 1.01 45%, 1.034 50%, 1.045 57.5%, 1.041 65%, 1.034 70%, 1.019 80%, 1.007 90%, 1);
     }
   }
+  /* dark islands: the QARA card and photo placeholders keep the original coal palette ("a black calf on kraft") */
+  .hero, .ph, .tile--secret {
+    color-scheme: dark;
+    --color-bg: var(--coal-900); --color-bg-deep: var(--coal-950);
+    --color-surface-1: var(--coal-850); --color-surface-2: var(--coal-800); --color-surface-3: var(--coal-700);
+    --color-line: rgb(243 234 219 / .10); --color-line-strong: rgb(243 234 219 / .18);
+    --color-text: var(--cream-100); --color-text-2: var(--cream-300); --color-text-3: var(--cream-500);
+    --color-accent: var(--ember-500); --color-accent-text: var(--ember-400);
+    --color-highlight: var(--saffron-400); --color-chili: var(--chili-500); --color-leaf: var(--leaf-500);
+    --color-on-accent: var(--coal-900);
+    --shadow-card: inset 0 1px 0 rgb(243 234 219 / .06);
+    color: var(--color-text);
+  }
   @media (prefers-contrast: more) {
-    :root { --color-text-2: var(--cream-100); --color-text-3: var(--cream-100); --color-line: rgb(243 234 219 / .28); }
+    :root { --color-text-2: var(--ink-900); --color-text-3: var(--ink-900); --color-line: rgb(29 24 20 / .35); }
+    .hero, .ph, .tile--secret { --color-text-2: var(--cream-100); --color-text-3: var(--cream-100); --color-line: rgb(243 234 219 / .28); }
   }
 }
 
@@ -152,7 +171,7 @@
   .demo {
     display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: center; justify-content: center;
     min-height: 32px; padding: var(--space-1) var(--pad-end) var(--space-1) var(--pad-start);
-    background: var(--color-highlight); color: var(--color-on-accent);
+    background: var(--color-highlight-bg); color: var(--color-on-highlight);
     font: 700 var(--fs-micro)/1.2 var(--font-text); letter-spacing: .06em; text-transform: uppercase; text-align: center;
   }
   .demo b { padding: 2px 6px; border: 1.5px solid currentColor; border-radius: var(--radius-xs); }
@@ -456,7 +475,7 @@
   .legend .ic { font-size: 18px; color: var(--color-text-3); }
   .notes { margin-top: var(--space-3); padding: var(--space-5); border-radius: var(--radius-m); border: 1px solid var(--color-line-strong); outline: none; }
   .notes p { margin-top: var(--space-3); font-size: var(--fs-sub); line-height: 1.55; color: var(--color-text-2); }
-  .notes__demo { display: inline-block; margin-inline-end: var(--space-2); padding: 2px 6px; border-radius: var(--radius-xs); background: var(--color-highlight); color: var(--color-on-accent); font: 700 var(--fs-micro)/1.2 var(--font-text); letter-spacing: .06em; }
+  .notes__demo { display: inline-block; margin-inline-end: var(--space-2); padding: 2px 6px; border-radius: var(--radius-xs); background: var(--color-highlight-bg); color: var(--color-on-highlight); font: 700 var(--fs-micro)/1.2 var(--font-text); letter-spacing: .06em; }
   .notes .tile__t { display: inline; }
   .sign { margin-top: var(--space-12); font: 800 clamp(52px, 20vw, 150px)/.88 var(--font-display); letter-spacing: -.03em; text-transform: uppercase; color: var(--color-surface-3); }
   .sign span { display: block; }
@@ -490,7 +509,7 @@
   .set { position: relative; }
   .set__open { text-align: start; text-transform: inherit; letter-spacing: inherit; font: inherit; color: inherit; }
   .set__open::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
-  .set__open .chev { display: none; } /* big set titles wrap: the whole card is the affordance */
+  .set__open .chev, .item__toggle .chev { display: none; } /* big titles wrap: the whole card is the affordance */
   .item__toggle .chev { rotate: -90deg; opacity: .55; margin-inline-start: 6px; font-size: .7em; vertical-align: middle; }
   :is(.item, .set) :is(a, .variants, .line__vars) { position: relative; z-index: 1; }
 
@@ -517,7 +536,7 @@
   .sheet__grab { position: absolute; top: var(--space-2); left: 50%; translate: -50% 0; z-index: 2; width: 40px; height: 5px; border-radius: 3px; background: rgb(243 234 219 / .45); }
   .sheet__close {
     position: absolute; top: var(--space-3); right: var(--space-3); z-index: 2; width: 44px; height: 44px;
-    border: 0; border-radius: 50%; background: rgb(8 6 5 / .55); color: var(--color-text); font-size: 26px; line-height: 1;
+    border: 0; border-radius: 50%; background: rgb(8 6 5 / .55); color: #F3EADB; font-size: 26px; line-height: 1;
   }
   .sheet__media { touch-action: none; cursor: grab; } /* swipe-down handle */
   .sheet__img, .ph { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
