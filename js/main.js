@@ -1,8 +1,9 @@
 // Composition root: owns state and the DOM (render, language, scroll-spy, motion hooks).
-import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r10';
-import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r10';
+import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r12';
+import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r12';
 
-const BUILD = '2026-11-25-r10'; // = <html data-build>, set by tools/bump_version.py
+let story = null; // { id, lang, file: Promise<File|null> } — the story card is drawn before the tap (iOS share rule)
+const BUILD = '2026-11-25-r12'; // = <html data-build>, set by tools/bump_version.py
 // Shown before or without menu.json, so they cannot live in its "ui" block.
 const OFFLINE_STRINGS = {
   az: { page: 'Black Calf — Menyu', skip: 'Menyuya keç', loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', empty: 'Menyu müvəqqəti əlçatan deyil. Kassada soruşun.', retry: 'Yenidən cəhd et' },
@@ -235,8 +236,31 @@ function openSheet(id) {
   } else {
     sheet.querySelector('[data-js="sheet-panel"]').scrollTop = 0;
   }
+  prepareStoryFor(id);
   // focus the panel itself (no ring); iOS would otherwise auto-focus × and draw a focus ring after a tap
   sheet.querySelector('[data-js="sheet-panel"]').focus({ preventScroll: true });
+}
+
+// ---------- share to stories (js/share.js is loaded only when a modal opens) ----------
+
+const shareModule = () => import('./share.js?v=' + BUILD);
+
+function prepareStoryFor(id) {
+  if (story && story.id === id && story.lang === state.lang) return;
+  const item = findItem(id);
+  const ctx = createContext(state.model, state.lang);
+  const pageUrl = location.origin + location.pathname;
+  story = { id, lang: state.lang, file: shareModule().then((m) => m.prepareStory({ item, ctx, pageUrl })).catch(() => null) };
+}
+
+async function onShare(button) {
+  prepareStoryFor(button.dataset.id);
+  const label = button.querySelector('span');
+  const ctx = createContext(state.model, state.lang);
+  const [module, file] = await Promise.all([shareModule(), story.file]);
+  if (!file) return;
+  const result = await module.shareStory(file, `Black Calf — ${ctx.pick(findItem(button.dataset.id).title)}`);
+  if (result === 'saved' && label) label.textContent = ctx.t('story_saved');
 }
 
 /** Every close goes through history so Back, ×, Esc and the backdrop behave the same. */
@@ -312,6 +336,8 @@ function wireEvents() {
     if (link) setActiveLink($('catnav'), link); // immediate feedback; the spy confirms on arrival
   });
   document.addEventListener('click', (event) => {
+    const share = event.target.closest('[data-js="share"]');
+    if (share && state.model) return void onShare(share);
     const opener = event.target.closest('[data-js="open"]');
     if (opener && state.model) {
       event.preventDefault();

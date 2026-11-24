@@ -1,6 +1,6 @@
 // Versioned CSS/JS and fonts: cache-first. Page and menu.json: network-first with a timeout (new prices at once,
 // cached menu offline). Bump: tools/bump_version.py. Emergency: KILL = true clears caches and unregisters.
-const VERSION = '2026-11-25-r10';
+const VERSION = '2026-11-25-r12';
 const KILL = false;
 const CACHE = `bc-${VERSION}`;
 const NETWORK_TIMEOUT_MS = 2500;

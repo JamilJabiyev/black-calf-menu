@@ -1235,6 +1235,16 @@
       "az": "Kassada de",
       "ru": "Скажи на кассе",
       "en": "Say at the counter"
+    },
+    "share_story": {
+      "az": "Hekayədə paylaş",
+      "ru": "Поделиться в сторис",
+      "en": "Share to stories"
+    },
+    "story_saved": {
+      "az": "Şəkil saxlanıldı — hekayəyə əlavə et",
+      "ru": "Картинка сохранена — добавь в сторис",
+      "en": "Image saved — add it to your story"
     }
   }
 }

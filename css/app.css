@@ -565,6 +565,8 @@
   .sheet__price .price--l { font-size: 34px; }
   .sheet__vars small { color: var(--color-text-3); font-size: 12px; }
   .sheet__body > .upsell, .sheet__body > .chip { justify-self: start; }
+  .btn--share { width: 100%; justify-content: center; gap: var(--space-2); }
+  .btn--share .ic { font-size: 20px; }
 
   /* ---------- states ---------- */
   .state { display: grid; justify-items: center; gap: var(--space-3); max-width: 36ch; margin: var(--space-16) auto; padding: 0 var(--gutter); text-align: center; }
