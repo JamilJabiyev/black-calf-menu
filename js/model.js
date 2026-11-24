@@ -151,7 +151,8 @@ function normalizeItem(raw, legend, warnings) {
     number: String(raw.number ?? ''),
     ...splitName(raw.name, raw.subtitle),
     description: raw.short_description || raw.description || {},
-    fullDescription: raw.description || raw.short_description || {},
+    // sets: the long text repeats the formula with "No.3" refs (legal), so the sheet uses the short hook too
+    fullDescription: (isSet ? raw.short_description : raw.description) || raw.description || raw.short_description || {},
     // own photos only (legal: real portions): a relative img/ path, never a URL from the data
     image: /^img\/[\w.-]+\.(webp|avif|jpe?g|png)$/i.test(raw.image || '') ? raw.image : null,
     priceCents,

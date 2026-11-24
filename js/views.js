@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-25-r6';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r8';
 
 // ---------- safe templating ----------
 
@@ -110,12 +110,12 @@ function spice(level, ctx, withWord) {
   return html`<span class="spice" role="img" aria-label="${ctx.t('spicy_level')} ${level}/3">${level ? chilies : ''}${word}</span>`;
 }
 
-/** Visible label + link to the shared-kitchen note (BA AC-08.1, AC-08.6). Empty list → nothing (decision 12). */
+/** Visible label, plain text: a link here sent guests to the page bottom on every tap (Jamil, r7). Empty list → nothing. */
 function allergenList(keys, ctx, of = '') {
   if (!keys || !keys.length) return '';
   const legend = ctx.model.allergenLegend;
-  return html`<a class="allergens" href="#notes"><span class="allergens__label">${ctx.t('allergens')}${of ? ` (${of})` : ''}:</span>${keys.map((key) => html`
-    <span class="allergen">${ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(legend[key]) || key}</span>`)}</a>`;
+  return html`<span class="allergens"><span class="allergens__label">${ctx.t('allergens')}${of ? ` (${of})` : ''}:</span>${keys.map((key) => html`
+    <span class="allergen">${ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(legend[key]) || key}</span>`)}</span>`;
 }
 
 /** "2026-11-24" → "24.11.2026" (az/ru), "24/11/2026" (en). */
@@ -321,7 +321,7 @@ export function detailSheet(item, ctx) {
       ? html`<ul class="line__vars sheet__vars" role="list">${item.variants.map((v) => html`<li class="line__var">
           <span>${ctx.pick(v.name)}${v.weightG ? html` <small>${sizeOf({ weightG: v.weightG }, ctx)}</small>` : ''}</span>${price(v.priceCents, ctx, { sign })}</li>`)}</ul>`
       : price(item.priceCents, ctx, { cls: 'price--l', sign });
-  return html`<div class="sheet__panel" data-js="sheet-panel">
+  return html`<div class="sheet__panel" data-js="sheet-panel" tabindex="-1" autofocus>
     <span class="sheet__grab" aria-hidden="true"></span>
     <button class="sheet__close" type="button" data-js="close" aria-label="${ctx.t('close')}">×</button>
     <div class="sheet__media" data-js="sheet-drag">${photo(item, ctx)}</div>
