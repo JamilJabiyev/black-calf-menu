@@ -1,7 +1,7 @@
 // Story card (1080×1920) drawn on a canvas in the guest's phone, then shared as an image file
 // (Web Share API: Instagram / WhatsApp stories) or downloaded where sharing files is not supported.
 // Lazy-loaded when a details modal opens, so the first screen never pays for it. Nothing is uploaded.
-import { formatAmount } from './model.js?v=2026-11-25-r12';
+import { formatAmount } from './model.js?v=2026-11-25-r13';
 
 const W = 1080;
 const H = 1920;

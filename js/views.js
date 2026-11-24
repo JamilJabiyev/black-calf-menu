@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-25-r12';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r13';
 
 // ---------- safe templating ----------
 
@@ -293,11 +293,9 @@ function setCard(item, ctx, isFeature) {
     <h3 class="set__title" id="t-${item.id}">${openButton(item, name(item.title, ctx, item.number), 'set__open')}</h3>
     ${item.subtitle ? html`<p class="set__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     ${formula(item.set, ctx)}
-    ${choices(item.set, ctx)}
     <p class="set__desc">${ctx.pick(item.description)}</p>
     ${availability(item, ctx)}
     ${setPricing(item, ctx)}
-    ${meta(item, ctx, { size: false, compact: true })}
   </article>`;
 }
 
@@ -338,13 +336,13 @@ export function detailSheet(item, ctx) {
       <h2 class="sheet__title" id="sheet-t">${name(item.title, ctx)}</h2>
       ${item.subtitle ? html`<p class="sheet__sub">${ctx.pick(item.subtitle)}</p>` : ''}
       ${tagList(item, ctx)}
-      <div class="sheet__price">${pricing}</div>
+      <div class="sheet__price">${pricing}${item.isSet ? meta(item, ctx, { size: false }) : ''}</div>
       <p class="sheet__say"><span>${ctx.t('say_at_counter')}</span><b>${displayNo(item.number)}</b></p>
       <button class="btn btn--primary btn--share" type="button" data-js="share" data-id="${item.id}">${icon('share')}<span>${ctx.t('share_story')}</span></button>
       ${item.isSet ? html`${formula(item.set, ctx)}${choices(item.set, ctx)}` : ''}
       <p class="sheet__desc">${ctx.pick(item.fullDescription)}</p>
       ${availability(item, ctx)}
-      ${meta(item, ctx, { size: !item.variants.length })}
+      ${item.isSet ? '' : meta(item, ctx, { size: !item.variants.length })}
       ${item.variants.length && ownAllergens(item)
         ? item.variants.filter((v) => v.allergens?.length).map((v) => html`<p class="meta">${allergenList(v.allergens, ctx, ctx.pick(v.name))}</p>`) : ''}
       ${upsell(item, ctx)}

@@ -183,11 +183,12 @@
   }
   .brand { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap); text-decoration: none; }
   .mark { width: 36px; height: 36px; fill: currentColor; }
+  .brand .mark { width: 40px; height: 40px; padding: 5px; box-sizing: border-box; border-radius: 11px; fill: url(#bc-gold); background: radial-gradient(circle at 50% 55%, #2E1A0C, #120E0C 75%); }
   .brand__word { font: 800 15px/1 var(--font-display); letter-spacing: .08em; white-space: nowrap; }
   @media (max-width: 340px) {
     .top { column-gap: var(--space-2); }
     .brand { gap: 6px; }
-    .brand .mark { width: 28px; height: 28px; }
+    .brand .mark { width: 32px; height: 32px; padding: 4px; border-radius: 9px; }
     .brand__word { font-size: 12px; letter-spacing: .02em; }
   }
   @media (max-width: 599px) { .top__welcome { display: none; } } /* phones: the hero speaks first (r10) */
@@ -457,7 +458,7 @@
     font: 700 14px/1 var(--font-text); font-variant-numeric: tabular-nums;
   }
   .avail { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--space-4); font-size: var(--fs-meta); color: var(--color-text-2); }
-  .set .meta { margin-top: var(--space-3); }
+  .sheet__price .meta { margin-top: var(--space-3); }
   @media (min-width: 600px) {
     .sets { grid-template-columns: 1fr 1fr; }
     .set--feature { grid-column: 1 / -1; }
