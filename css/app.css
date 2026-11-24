@@ -170,11 +170,11 @@
   /* ---------- DEMO strip (never animated: it is a legal notice) ---------- */
   .demo {
     display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: center; justify-content: center;
-    min-height: 32px; padding: var(--space-1) var(--pad-end) var(--space-1) var(--pad-start);
+    min-height: 24px; padding: 2px var(--pad-end) 2px var(--pad-start); /* thinner (r10): legal notice, not a headline */
     background: var(--color-highlight-bg); color: var(--color-on-highlight);
     font: 700 var(--fs-micro)/1.2 var(--font-text); letter-spacing: .06em; text-transform: uppercase; text-align: center;
   }
-  .demo b { padding: 2px 6px; border: 1.5px solid currentColor; border-radius: var(--radius-xs); }
+  .demo b { padding: 0 5px; border: 1.5px solid currentColor; border-radius: var(--radius-xs); }
 
   /* ---------- header + language: wraps instead of squeezing the wordmark ---------- */
   .top {
@@ -190,6 +190,7 @@
     .brand .mark { width: 28px; height: 28px; }
     .brand__word { font-size: 12px; letter-spacing: .02em; }
   }
+  @media (max-width: 599px) { .top__welcome { display: none; } } /* phones: the hero speaks first (r10) */
   .top__welcome { flex-basis: 100%; min-height: 2.8em; max-width: 40ch; color: var(--color-text-3); font-size: var(--fs-sub); line-height: 1.4; }
   .lang {
     position: relative; isolation: isolate; display: flex; padding: 3px; border-radius: var(--radius-pill);
@@ -222,7 +223,7 @@
   }
   @supports (font-size: 1cqi) {
     /* size QARA and the stamp to the hero itself: same proportions on a phone and in the desktop panel */
-    .hero { container-type: inline-size; --fs-hero: clamp(52px, 21cqi, 120px); --stamp-size: min(34cqi, 200px); }
+    .hero { container-type: inline-size; --fs-hero: clamp(48px, 19cqi, 112px); --stamp-size: min(30cqi, 180px); }
   }
   .hero__media { position: absolute; z-index: -1; top: var(--space-3); inset-inline-end: var(--space-3); }
   .hero__body { position: relative; pointer-events: none; } /* taps fall through to the stamp */
@@ -252,6 +253,7 @@
     color: var(--color-text-2); text-decoration: underline; text-underline-offset: 3px;
   }
   button.more::after { content: " ↓"; white-space: pre; }
+  button.more[data-js="open"]::after { content: " →"; }
   button.more[aria-expanded="true"]::after { content: " ↑"; }
 
   /* stamp: burnt face is an <img> (an LCP candidate painted with the shell), the hot iron animates over it */
@@ -373,6 +375,9 @@
   .allergens__label { color: var(--color-text-3); }
   .allergen { display: inline-flex; align-items: center; gap: 3px; color: var(--color-text-2); }
   .allergen .ic { font-size: 14px; }
+  .allergens--icons { gap: 6px; color: var(--color-text-2); }
+  .allergens--icons .ic { font-size: 15px; }
+  .meta .tags { margin: 0; }
   .upsell {
     display: inline-block; margin-top: var(--space-3); font-size: var(--fs-meta); font-weight: 700; color: var(--color-accent-text);
     border-bottom: 1px dashed currentColor;
@@ -436,6 +441,7 @@
   }
   .formula__part .ic { font-size: 16px; color: var(--color-accent); }
   .formula__plus { color: var(--color-text-3); }
+  .formula__item { display: inline-flex; align-items: center; gap: var(--space-2); }
   .set__choices { display: grid; gap: 2px; margin-top: var(--space-3); font-size: var(--fs-meta); line-height: 1.45; color: var(--color-text-2); }
   .set__choices b { color: var(--color-text-3); font-weight: 700; }
   .set__desc { margin-top: var(--space-3); color: var(--color-text-2); }
@@ -544,8 +550,15 @@
   .ph__ic { width: 34%; height: auto; aspect-ratio: 1; fill: none; stroke: var(--color-accent); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
   .ph__mark { position: absolute; right: var(--space-4); bottom: var(--space-4); width: 44px; height: 44px; color: var(--color-text-3); }
   .ph__note { position: absolute; left: var(--space-4); bottom: var(--space-4); font-size: 12px; color: var(--color-text-3); letter-spacing: .04em; }
+  .ph { aspect-ratio: 16 / 7; } /* placeholder stays short so price and contents are visible at once (r10) */
+  .ph__ic { width: auto; height: 56%; }
+  .sheet__say {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+    padding: var(--space-3) var(--space-4); border: 1.5px dashed var(--color-accent); border-radius: var(--radius-m);
+    color: var(--color-text-2); font-weight: 700; font-size: var(--fs-sub);
+  }
+  .sheet__say b { font: 800 clamp(28px, 9vw, 40px)/1 var(--font-display); color: var(--color-accent-text); letter-spacing: .02em; }
   .sheet__body { display: grid; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-2); }
-  .sheet__no { font-family: var(--font-display); font-size: 14px; color: var(--color-accent-text); }
   .sheet__title { font-family: var(--font-display); font-size: clamp(30px, 10vw, 44px); line-height: .95; text-transform: uppercase; }
   .sheet__sub { color: var(--color-text-2); font-weight: 700; margin-top: calc(var(--space-2) * -1); }
   .sheet__desc { color: var(--color-text); font-size: 16px; line-height: 1.55; }

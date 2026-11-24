@@ -333,7 +333,12 @@
             "milk",
             "sesame"
           ],
-          "image": null
+          "image": null,
+          "short_description": {
+            "az": "Oddan mal əti, pendir və narşərablı qara sous. Damğanı gözünün qabağında vururuq.",
+            "ru": "Говядина с огня, сыр и чёрный соус на наршарабе. Клеймо ставим при тебе.",
+            "en": "Fire-grilled beef, cheese and black narsharab sauce. Branded while you watch."
+          }
         },
         {
           "id": "durum-boss",
@@ -1225,6 +1230,11 @@
       "az": "Bağla",
       "ru": "Закрыть",
       "en": "Close"
+    },
+    "say_at_counter": {
+      "az": "Kassada de",
+      "ru": "Скажи на кассе",
+      "en": "Say at the counter"
     }
   }
 }

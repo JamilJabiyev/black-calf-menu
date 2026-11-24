@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-25-r9';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r10';
 
 // ---------- safe templating ----------
 
@@ -118,18 +118,29 @@ function allergenList(keys, ctx, of = '') {
     <span class="allergen">${ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(legend[key]) || key}</span>`)}</span>`;
 }
 
+/** List rows: icons only (names are in the details modal and read out by screen readers). */
+function allergenIcons(keys, ctx) {
+  if (!keys || !keys.length) return '';
+  const legend = ctx.model.allergenLegend;
+  const names = keys.map((key) => ctx.pick(legend[key]) || key).join(', ');
+  return html`<span class="allergens allergens--icons" role="img" aria-label="${ctx.t('allergens')}: ${names}" title="${names}">${
+    keys.map((key) => (ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : html`<span>${ctx.pick(legend[key]) || key}</span>`))}</span>`;
+}
+
 /** "2026-11-24" → "24.11.2026" (az/ru), "24/11/2026" (en). */
 const formatDate = (iso, lang) => iso.split('-').reverse().join(lang === 'en' ? '/' : '.');
 
 const sizeOf = (thing, ctx) => formatSize(thing, ctx.model.ui.units || {}, ctx.lang);
 
-function meta(item, ctx, { size = true, allergens = true } = {}) {
+/** compact: one line for list rows (tags + size + spice + allergen icons); full labels live in the modal. */
+function meta(item, ctx, { size = true, allergens = true, compact = false, tags = false } = {}) {
   const parts = [
+    tags ? tagList(item, ctx) : '',
     size && sizeOf(item, ctx) ? html`<span>${sizeOf(item, ctx)}</span>` : '',
     spice(item.spicyLevel, ctx, item.spicyTag),
-    allergens ? allergenList(item.allergens, ctx) : '',
+    allergens ? (compact ? allergenIcons(item.allergens, ctx) : allergenList(item.allergens, ctx)) : '',
   ].filter(Boolean);
-  return parts.length ? html`<p class="meta">${parts}</p>` : '';
+  return parts.length ? html`<div class="meta">${parts}</div>` : '';
 }
 
 /** Variants override item allergens only where they define their own (BA AC-05.2). */
@@ -174,7 +185,7 @@ export function heroBody(item, ctx) {
     <h2 class="hero__title" id="hero-t">${name(item.title, ctx)}</h2>
     ${item.subtitle ? html`<p class="hero__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     <p class="hero__desc clamp" id="d-hero">${ctx.pick(item.description)}</p>
-    <button class="more" type="button" aria-expanded="false" aria-controls="d-hero" data-js="expand">${ctx.t('more_toggle')}</button>
+    <button class="more" type="button" aria-haspopup="dialog" data-js="open" data-id="${item.id}">${ctx.t('more_toggle')}</button>
     <div class="hero__buy">${price(item.priceCents, ctx, { cls: 'price--xl' })}${phrase ? html`<span class="sticker">${phrase}</span>` : ''}</div>
     <div class="hero__meta">${meta(item, ctx)}${tagList(item, ctx)}</div>`;
 }
@@ -193,7 +204,7 @@ function signatureRow(item, ctx) {
   return html`<article class="item item--sig" id="item-${item.id}" aria-labelledby="t-${item.id}">
     ${rowHead(item, ctx, price(item.priceCents, ctx))}
     ${tagList(item, ctx, badge)}
-    ${meta(item, ctx)}
+    ${meta(item, ctx, { compact: true })}
     <a class="more" href="#qara">↑ ${ctx.t('more_above')}</a>
   </article>`;
 }
@@ -202,7 +213,7 @@ function variantCells(item, ctx) {
   const own = ownAllergens(item);
   return html`<ul class="variants" role="list">${item.variants.map((v) => html`<li>
     <span class="variants__name">${ctx.pick(v.name)}</span>
-    <span class="variants__w">${sizeOf({ weightG: v.weightG }, ctx)}${own ? html` ${allergenList(v.allergens, ctx)}` : ''}</span>
+    <span class="variants__w">${sizeOf({ weightG: v.weightG }, ctx)}${own ? html` ${allergenIcons(v.allergens, ctx)}` : ''}</span>
     ${price(v.priceCents, ctx, { cls: 'price--s' })}</li>`)}</ul>`;
 }
 
@@ -214,10 +225,9 @@ function dishRow(item, ctx) {
   return html`<article class="item" id="item-${item.id}" aria-labelledby="t-${item.id}">
     ${rowHead(item, ctx, priceHtml)}
     ${item.subtitle ? html`<p class="item__sub">${ctx.pick(item.subtitle)}</p>` : ''}
-    ${tagList(item, ctx)}
     <p class="item__desc clamp" id="d-${item.id}">${ctx.pick(item.description)}</p>
     ${hasVariants ? variantCells(item, ctx) : ''}
-    ${meta(item, ctx, { size: !hasVariants, allergens: !(hasVariants && ownAllergens(item)) })}
+    ${meta(item, ctx, { size: !hasVariants, allergens: !(hasVariants && ownAllergens(item)), compact: true, tags: true })}
     ${upsell(item, ctx)}
   </article>`;
 }
@@ -239,7 +249,7 @@ function line(item, ctx) {
   return html`<article class="item item--line" id="item-${item.id}" aria-labelledby="t-${item.id}">
     ${rowHead(item, ctx, priceHtml)}
     <p class="item__sub">${item.icon ? icon(item.icon, 'item__icon') : ''}${ctx.pick(item.description)}</p>
-    ${meta(item, ctx, { size: item.volumeMl !== null, allergens: !(item.variants.length && ownAllergens(item)) })}
+    ${meta(item, ctx, { size: item.volumeMl !== null, allergens: !(item.variants.length && ownAllergens(item)), compact: true })}
     ${lineVariants(item, ctx, sign)}
   </article>`;
 }
@@ -248,8 +258,8 @@ function formula(set, ctx) {
   if (!set || !set.parts.length) return '';
   const names = ctx.model.ui.set_parts || {};
   return html`<ol class="formula" aria-label="${ctx.t('set_contents')}">${set.parts.map((part, i) => html`${
-    i ? html`<li class="formula__plus" aria-hidden="true">+</li>` : ''}<li class="formula__part">${icon(PART_ICONS[part.key])}${
-    part.count > 1 ? `${part.count}× ` : ''}${ctx.pick(names[part.key])}${part.variant ? ` ${ctx.pick(part.variant)}` : ''}</li>`)}</ol>`;
+    ''}<li class="formula__item">${i ? html`<span class="formula__plus" aria-hidden="true">+</span>` : ''}<span class="formula__part">${icon(PART_ICONS[part.key])}${
+    part.count > 1 ? `${part.count}× ` : ''}${ctx.pick(names[part.key])}${part.variant ? ` ${ctx.pick(part.variant)}` : ''}</span></li>`)}</ol>`;
 }
 
 /** "Dürüm: Original (Mal əti) · Gold" straight from set_choices. */
@@ -287,7 +297,7 @@ function setCard(item, ctx, isFeature) {
     <p class="set__desc">${ctx.pick(item.description)}</p>
     ${availability(item, ctx)}
     ${setPricing(item, ctx)}
-    ${meta(item, ctx, { size: false })}
+    ${meta(item, ctx, { size: false, compact: true })}
   </article>`;
 }
 
@@ -325,11 +335,11 @@ export function detailSheet(item, ctx) {
     <button class="sheet__close" type="button" data-js="close" aria-label="${ctx.t('close')}">×</button>
     <div class="sheet__media">${photo(item, ctx)}</div>
     <div class="sheet__body">
-      <p class="sheet__no" aria-hidden="true">${displayNo(item.number)}</p>
       <h2 class="sheet__title" id="sheet-t">${name(item.title, ctx)}</h2>
       ${item.subtitle ? html`<p class="sheet__sub">${ctx.pick(item.subtitle)}</p>` : ''}
       ${tagList(item, ctx)}
       <div class="sheet__price">${pricing}</div>
+      <p class="sheet__say"><span>${ctx.t('say_at_counter')}</span><b>${displayNo(item.number)}</b></p>
       ${item.isSet ? html`${formula(item.set, ctx)}${choices(item.set, ctx)}` : ''}
       <p class="sheet__desc">${ctx.pick(item.fullDescription)}</p>
       ${availability(item, ctx)}
