@@ -1,8 +1,8 @@
 // Composition root: owns state and the DOM (render, language, scroll-spy, motion hooks).
-import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r8';
-import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r8';
+import { LANGS, loadMenu, createContext, MenuLoadError } from './model.js?v=2026-11-25-r9';
+import { mount, renderApp, errorState, detailSheet } from './views.js?v=2026-11-25-r9';
 
-const BUILD = '2026-11-25-r8'; // = <html data-build>, set by tools/bump_version.py
+const BUILD = '2026-11-25-r9'; // = <html data-build>, set by tools/bump_version.py
 // Shown before or without menu.json, so they cannot live in its "ui" block.
 const OFFLINE_STRINGS = {
   az: { page: 'Black Calf — Menyu', skip: 'Menyuya keç', loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', empty: 'Menyu müvəqqəti əlçatan deyil. Kassada soruşun.', retry: 'Yenidən cəhd et' },
@@ -192,7 +192,6 @@ function armSets() {
 
 // ---------- details sheet: native <dialog> (focus trap, Esc, top layer) ----------
 
-const SWIPE_CLOSE_PX = 90;
 let sheet = null;
 let sheetItemId = null;
 
@@ -213,7 +212,6 @@ function ensureSheet() {
   sheet.addEventListener('click', (event) => {
     if (event.target === sheet || event.target.closest('[data-js="close"]')) requestCloseSheet(); // backdrop or ×
   });
-  wireSwipe(sheet);
   document.body.append(sheet);
   return sheet;
 }
@@ -241,7 +239,7 @@ function openSheet(id) {
   sheet.querySelector('[data-js="sheet-panel"]').focus({ preventScroll: true });
 }
 
-/** Every close goes through history so Back, ×, Esc, backdrop and swipe behave the same. */
+/** Every close goes through history so Back, ×, Esc and the backdrop behave the same. */
 function requestCloseSheet() {
   if (history.state?.bcSheet) history.back();
   else closeSheet();
@@ -259,32 +257,6 @@ function closeSheet() {
   if (!canAnimate()) return finish();
   sheet.classList.add('is-closing');
   setTimeout(finish, cssMs('--sheet-out-ms'));
-}
-
-/** Drag the photo area down to close; under the threshold it springs back (CSS transition). */
-function wireSwipe(dialog) {
-  let startY = null;
-  let panel = null;
-  dialog.addEventListener('pointerdown', (event) => {
-    if (!event.target.closest('[data-js="sheet-drag"]')) return;
-    panel = dialog.querySelector('[data-js="sheet-panel"]');
-    startY = event.clientY;
-    panel.classList.add('is-dragging');
-  });
-  dialog.addEventListener('pointermove', (event) => {
-    if (startY === null) return;
-    panel.style.transform = `translateY(${Math.max(0, event.clientY - startY)}px)`;
-  });
-  const end = (event) => {
-    if (startY === null) return;
-    const dy = event.clientY - startY;
-    startY = null;
-    panel.classList.remove('is-dragging');
-    panel.style.transform = '';
-    if (dy > SWIPE_CLOSE_PX) requestCloseSheet();
-  };
-  dialog.addEventListener('pointerup', end);
-  dialog.addEventListener('pointercancel', end);
 }
 
 function toggleExpand(button) {
@@ -316,7 +288,10 @@ async function boot() {
     state.model = model;
     state.error = null;
     render();
-    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: 'instant' });
+    // only deep links into the menu scroll; anything else (an old #notes from v1) is dropped so the page opens at the top
+    const target = /^#(cat|item)-[\w-]+$/.test(location.hash) && document.getElementById(location.hash.slice(1));
+    if (target) target.scrollIntoView({ behavior: 'instant' });
+    else if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
   } catch (error) {
     if (isDebug) console.warn('[menu] load failed:', error.message);
     if (!(error instanceof MenuLoadError) && reloadFresh()) return; // a render bug may be a version mix
@@ -360,6 +335,8 @@ function registerServiceWorker() {
 }
 
 function start() {
+  // a QR menu always starts at the top: no restored scroll position from an earlier visit (Jamil, r9)
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   if (root.classList.contains('is-intro')) timers.intro = setTimeout(endIntro, cssMs('--intro-ms'));
   syncLangSwitch();
   wireEvents();

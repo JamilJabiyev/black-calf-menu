@@ -513,35 +513,26 @@
   .item__toggle .chev { rotate: -90deg; opacity: .55; margin-inline-start: 6px; font-size: .7em; vertical-align: middle; }
   :is(.item, .set) :is(a, .variants, .line__vars) { position: relative; z-index: 1; }
 
-  /* ---------- details sheet (native <dialog>; slides up on phones, centred card on wide screens) ---------- */
+  /* ---------- details: a centred modal on every screen (Jamil, r9: the bottom sheet never felt right) ---------- */
   html.has-sheet { overflow: hidden; }
   .sheet {
     position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
     margin: 0; padding: 0; border: 0; background: transparent; color: var(--color-text);
   }
-  .sheet[open] { display: flex; align-items: flex-end; justify-content: center; }
+  .sheet[open] { display: flex; align-items: center; justify-content: center; padding: max(var(--space-4), env(safe-area-inset-top)) var(--space-3) max(var(--space-4), env(safe-area-inset-bottom)); }
   .sheet::backdrop { background: rgb(8 6 5 / .7); }
   .sheet__panel {
-    position: relative; width: min(100%, 560px); max-height: 92svh; overflow-y: auto; overscroll-behavior: contain;
-    background: var(--color-surface-1); border-radius: var(--radius-l) var(--radius-l) 0 0;
-    box-shadow: 0 -1px 0 var(--color-line-strong); padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
-    transition: transform 320ms var(--ease-out);
+    position: relative; width: min(100%, 560px); max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--color-surface-1); border-radius: var(--radius-l); padding-bottom: var(--space-6);
+    box-shadow: 0 24px 48px -24px rgb(8 6 5 / .6);
   }
-  .sheet__panel.is-dragging { transition: none; }
   .sheet__panel:focus { outline: none; }
-  @media (min-width: 720px) {
-    .sheet[open] { align-items: center; }
-    .sheet__panel { border-radius: var(--radius-l); max-height: 88vh; }
-    .sheet__grab { display: none; }
-  }
-  .sheet__grab { position: absolute; top: var(--space-2); left: 50%; translate: -50% 0; z-index: 2; width: 40px; height: 5px; border-radius: 3px; background: rgb(243 234 219 / .45); }
   /* sticky, not absolute: stays in the top-right corner while the sheet content scrolls (Jamil, r7) */
   .sheet__close {
     position: sticky; top: var(--space-3); z-index: 3; display: block; width: 44px; height: 44px;
     margin: var(--space-3) var(--space-3) calc(-44px - var(--space-3)) auto;
     border: 0; border-radius: 50%; background: rgb(8 6 5 / .55); color: #F3EADB; font-size: 26px; line-height: 1;
   }
-  .sheet__media { touch-action: none; cursor: grab; } /* swipe-down handle */
   .sheet__img, .ph { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
   .ph {
     position: relative; display: grid; place-items: center; overflow: hidden;
@@ -625,8 +616,8 @@
     .item:has(.item__toggle:active), .set:has(.set__open:active) { transform: scale(.985); transition-duration: 90ms; }
     @media (hover: hover) { .set:hover { transform: translateY(-3px); } }
 
-    /* details sheet: springs up, content follows in a short stagger, photo icon pops; closes faster than it opens */
-    .sheet[open] .sheet__panel { animation: bc-sheet-up 300ms var(--ease-out); }
+    /* details modal: fades and grows slightly in place; closes a bit faster than it opens */
+    .sheet[open] .sheet__panel { animation: bc-sheet-up 260ms var(--ease-out); }
     .sheet[open]::backdrop { animation: bc-fade 240ms var(--ease-std); }
     .sheet.is-closing .sheet__panel { animation: bc-sheet-down var(--sheet-out-ms) var(--ease-std) forwards; }
     .sheet.is-closing::backdrop { animation: bc-fade var(--sheet-out-ms) var(--ease-std) reverse forwards; }
@@ -661,16 +652,11 @@
   @keyframes bc-strike { from { transform: scaleX(0); } }
   @keyframes bc-stamp-pop { from { opacity: 0; transform: scale(1.6) rotate(-12deg); } to { opacity: 1; transform: rotate(-3deg); } }
   @keyframes bc-rise { from { opacity: .4; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-  /* a short, calm rise instead of a full-screen slide (the long travel looked jerky on iPhone) */
-  @keyframes bc-sheet-up { from { opacity: 0; transform: translateY(48px); } }
-  @keyframes bc-sheet-down { to { opacity: 0; transform: translateY(40px); } }
+  @keyframes bc-sheet-up { from { opacity: 0; transform: scale(.96); } }
+  @keyframes bc-sheet-down { to { opacity: 0; transform: scale(.97); } }
   @keyframes bc-fade { from { opacity: 0; } }
   @keyframes bc-pop { from { opacity: 0; transform: scale(.55) rotate(-10deg); } }
   @keyframes bc-in { from { opacity: 0; transform: translateY(10px); } }
-  @media (min-width: 720px) {
-    @keyframes bc-sheet-up { from { opacity: 0; transform: translateY(24px) scale(.97); } }
-    @keyframes bc-sheet-down { to { opacity: 0; transform: translateY(16px) scale(.98); } }
-  }
 }
 
 @layer utilities {

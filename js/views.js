@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js?v=2026-11-25-r8';
+import { formatAmount, formatSize } from './model.js?v=2026-11-25-r9';
 
 // ---------- safe templating ----------
 
@@ -322,9 +322,8 @@ export function detailSheet(item, ctx) {
           <span>${ctx.pick(v.name)}${v.weightG ? html` <small>${sizeOf({ weightG: v.weightG }, ctx)}</small>` : ''}</span>${price(v.priceCents, ctx, { sign })}</li>`)}</ul>`
       : price(item.priceCents, ctx, { cls: 'price--l', sign });
   return html`<div class="sheet__panel" data-js="sheet-panel" tabindex="-1" autofocus>
-    <span class="sheet__grab" aria-hidden="true"></span>
     <button class="sheet__close" type="button" data-js="close" aria-label="${ctx.t('close')}">×</button>
-    <div class="sheet__media" data-js="sheet-drag">${photo(item, ctx)}</div>
+    <div class="sheet__media">${photo(item, ctx)}</div>
     <div class="sheet__body">
       <p class="sheet__no" aria-hidden="true">${displayNo(item.number)}</p>
       <h2 class="sheet__title" id="sheet-t">${name(item.title, ctx)}</h2>
