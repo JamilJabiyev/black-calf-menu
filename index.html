@@ -23,7 +23,14 @@
     var root = doc.documentElement;
     root.lang = picked;
     root.className = 'js';
-    var fonts = picked === 'ru' ? ['unbounded-800-caps-ru', 'onest-400-ru'] : ['unbounded-800-caps-az', 'onest-400-700-az'];
+    /* The brand scene plays once per visit from first paint, so it never waits for (or hides) menu data. */
+    try {
+      if (!sessionStorage.getItem('bc-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        sessionStorage.setItem('bc-intro', '1');
+        root.className = 'js is-intro';
+      }
+    } catch (e) { /* storage blocked: skip the scene */ }
+    var fonts = picked === 'ru' ? ['unbounded-800-caps-ru', 'onest-400-ru', 'onest-700-ru'] : ['unbounded-800-caps-az', 'onest-400-700-az'];
     fonts.forEach(function (name) {
       var link = doc.createElement('link');
       link.rel = 'preload'; link.as = 'font'; link.type = 'font/woff2'; link.crossOrigin = 'anonymous';
@@ -32,11 +39,11 @@
     });
   })(document);
 </script>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=2026-11-24-r2">
 <link rel="preload" href="menu.json" as="fetch" crossorigin>
-<link rel="modulepreload" href="js/model.js">
-<link rel="modulepreload" href="js/views.js">
-<script type="module" src="js/main.js"></script>
+<link rel="modulepreload" href="js/model.js?v=2026-11-24-r2">
+<link rel="modulepreload" href="js/views.js?v=2026-11-24-r2">
+<script type="module" src="js/main.js?v=2026-11-24-r2"></script>
 </head>
 <body id="top">
 <a class="skip" href="#menu" data-js="skip">Menyuya keç</a>
@@ -52,8 +59,6 @@
       <circle cx="100" cy="100" r="95" stroke-width="2.5"/>
       <circle cx="100" cy="100" r="67" stroke-width="1"/>
     </g>
-    <path id="stamp-arc" fill="none" d="M100 19a81 81 0 1 1 0 162a81 81 0 1 1 0-162"/>
-    <text class="stamp__ring-text" style="fill:var(--stamp-ring)"><textPath href="#stamp-arc" textLength="500" lengthAdjust="spacing">BLACK CALF · BLACK CALF · BLACK CALF ·</textPath></text>
     <use href="#mark" x="58" y="56" width="84" height="84" style="fill:currentColor"/>
   </symbol>
   <symbol id="i-durum" viewBox="0 0 24 24"><path d="M7 21 5 8a7 4 0 0 1 14 0l-2 13ZM5.6 12.5 18.4 9"/></symbol>
@@ -100,20 +105,22 @@
       <div class="hero__media" aria-hidden="true">
         <span class="stamp" data-js="stamp">
           <span class="stamp__flash"></span>
-          <span class="stamp__iron">
-            <svg class="stamp__burnt" viewBox="0 0 200 200" focusable="false"><use href="#stamp"/></svg>
-            <svg class="stamp__hot" viewBox="0 0 200 200" focusable="false"><use href="#stamp"/></svg>
+          <span class="stamp__face">
+            <img class="stamp__burnt" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E8572A'%3E%3Ccircle cx='100' cy='100' r='95' stroke-width='2.5'/%3E%3Ccircle cx='100' cy='100' r='67'/%3E%3C/g%3E%3Cg fill='%23F3EADB' fill-opacity='.86' transform='translate(58 56) scale(1.3125)'%3E%3Cpath d='M14 18C10 16 8 11 9 7c3 4 7 6 12 7zM50 18c4-2 6-7 5-11-3 4-7 6-12 7z'/%3E %3Cpath d='M17 24c-6 1-11-1-13-5 5-1 10 0 15 2zM47 24c6 1 11-1 13-5-5-1-10 0-15 2z' opacity='.75'/%3E %3Cpath fill-rule='evenodd' d='M32 12c10 0 15 7 15 15 0 7-3 11-4 17-1 7-5 12-11 12s-10-5-11-12c-1-6-4-10-4-17 0-8 5-15 15-15ZM32 19l1 2.62 2.8.14-2.18 1.77.73 2.71L32 24.7l-2.35 1.54.73-2.71-2.18-1.77 2.8-.14ZM24.2 33a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0ZM36.2 33a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0ZM26.4 48a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0ZM34.4 48a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0Z'/%3E%3C/g%3E%3C/svg%3E" width="300" height="300" alt="" decoding="async">
+            <svg class="stamp__ring" viewBox="0 0 200 200" focusable="false"><path id="stamp-arc" fill="none" d="M100 19a81 81 0 1 1 0 162a81 81 0 1 1 0-162"/><text class="stamp__ring-text"><textPath href="#stamp-arc" textLength="500" lengthAdjust="spacing">BLACK CALF · BLACK CALF · BLACK CALF ·</textPath></text></svg>
           </span>
+          <span class="stamp__iron"><svg class="stamp__hot" viewBox="0 0 200 200" focusable="false"><use href="#stamp"/></svg></span>
           <span class="stamp__smoke"></span><span class="stamp__smoke"></span><span class="stamp__smoke"></span>
         </span>
       </div>
       <div class="hero__body" data-js="hero-body">
         <span class="sk sk--kicker"></span>
         <span class="sk sk--title" id="hero-t"></span>
-        <span class="sk"></span><span class="sk"></span><span class="sk sk--short"></span>
+        <span class="sk sk--sub"></span><span class="sk"></span><span class="sk sk--short"></span><span class="sk sk--price"></span><span class="sk sk--short"></span>
         <p class="hero__status" role="status" data-js="status"></p>
       </div>
     </section>
+    <div data-js="teaser"></div>
 
     <div data-js="actions"></div>
   </div>

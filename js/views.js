@@ -1,5 +1,5 @@
 // Markup: html`` escapes by default (ADR-002), mount() is the only innerHTML sink. Views are pure.
-import { formatAmount, formatSize } from './model.js';
+import { formatAmount, formatSize } from './model.js?v=2026-11-24-r2';
 
 // ---------- safe templating ----------
 
@@ -61,7 +61,11 @@ const PART_ICONS = { durum: 'durum', fries: 'fries', drink: 'cup', sauce: 'sauce
 
 const icon = (name, cls = '') => html`<svg class="ic ${cls}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
 const markIcon = () => html`<svg class="mark" aria-hidden="true" focusable="false"><use href="#mark"/></svg>`;
+/** Cashier number; read as "01", never "No. 1" (legal). */
 const displayNo = (number) => (/^\d+$/.test(number) ? number.padStart(2, '0') : number);
+
+/** Latin brand names ("Midnight") get lang="en", so AZ uppercasing never makes "MİDNİGHT". */
+const nameLang = (l10n, ctx) => (ctx.lang !== 'en' && l10n.en && ctx.pick(l10n) === l10n.en ? html` lang="en"` : '');
 
 function amount(cents, ctx, sign = '') {
   return html`${sign}${formatAmount(cents, ctx.lang)}<span class="cur" aria-hidden="true">₼</span><span class="u-vh"> ${ctx.t('manat')}</span>`;
@@ -72,7 +76,7 @@ function price(cents, ctx, { cls = '', sign = '' } = {}) {
   return html`<p class="price ${cls}">${amount(cents, ctx, sign)}</p>`;
 }
 
-/** "3,50–4,00 ₼": variants share one price line in the row head; the cells below give the detail. */
+/** "3,50–4,00 ₼": one line in the row head; variant cells give the detail. */
 function priceSpan(cents, ctx, { cls = '', sign = '' } = {}) {
   const [min, max] = [Math.min(...cents), Math.max(...cents)];
   if (min === max) return price(min, ctx, { cls, sign });
@@ -84,7 +88,7 @@ function tagList(item, ctx, extra = '') {
     const label = ctx.pick(ctx.model.tagLabels[tag]);
     if (!label) return '';
     const glyph = tag === 'hit' ? icon('flame') : tag === 'veg' ? icon('leaf') : '';
-    return html`<li class="tag tag--${tag}">${glyph}${label}</li>`;
+    return html`<li class="tag tag--${tag}"${nameLang(ctx.model.tagLabels[tag], ctx)}>${glyph}${label}</li>`;
   });
   if (!extra && !tags.some(Boolean)) return '';
   return html`<ul class="tags" role="list">${extra}${tags}</ul>`;
@@ -93,17 +97,17 @@ function tagList(item, ctx, extra = '') {
 /** Chili scale 0–3; the "spicy" tag adds the word instead of a second badge. */
 function spice(level, ctx, withWord) {
   if (!level && !withWord) return '';
-  const label = `${ctx.t('spicy_level')} ${level}/3`;
   const chilies = [1, 2, 3].map((n) => icon('chili', n <= level ? '' : 'is-off'));
   const word = withWord ? html`<span class="spice__word" aria-hidden="true">${ctx.pick(ctx.model.tagLabels.spicy)}</span>` : '';
-  return html`<span class="spice" role="img" aria-label="${label}">${level ? chilies : ''}${word}</span>`;
+  return html`<span class="spice" role="img" aria-label="${ctx.t('spicy_level')} ${level}/3">${level ? chilies : ''}${word}</span>`;
 }
 
+/** Visible label + link to the shared-kitchen note (BA AC-08.1, AC-08.6). Empty list → nothing (decision 12). */
 function allergenList(keys, ctx) {
-  if (!keys || !keys.length) return ''; // decision 12: no line when empty, the footer disclaimer covers it
+  if (!keys || !keys.length) return '';
   const legend = ctx.model.allergenLegend;
-  return html`<span class="allergens"><span class="u-vh">${ctx.t('allergens')}: </span>${keys.map((key) => html`
-    <span class="allergen">${ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(legend[key]) || key}</span>`)}</span>`;
+  return html`<a class="allergens" href="#notes"><span class="allergens__label">${ctx.t('allergens')}:</span>${keys.map((key) => html`
+    <span class="allergen">${ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(legend[key]) || key}</span>`)}</a>`;
 }
 
 const sizeOf = (thing, ctx) => formatSize(thing, ctx.model.ui.units || {}, ctx.lang);
@@ -117,27 +121,46 @@ function meta(item, ctx, { size = true, allergens = true } = {}) {
   return parts.length ? html`<p class="meta">${parts}</p>` : '';
 }
 
-/** Variants override item spice/allergens only where they define their own (BA AC-05.2). */
-const variantsHaveOwnAllergens = (item) => item.variants.some((v) => v.allergens !== null);
+/** Variants override item allergens only where they define their own (BA AC-05.2). */
+const ownAllergens = (item) => item.variants.some((v) => v.allergens !== null);
 
-function titleFor(item, ctx) {
-  const number = /^\d+$/.test(item.number) ? fill(ctx.t('number_sr'), { n: item.number }) : item.number;
-  return html`<span class="u-vh">${number} </span>${ctx.pick(item.title)}`;
+function upsell(item, ctx) {
+  const hint = item.upsell;
+  if (!hint) return '';
+  const text = hint.kind === 'combo'
+    ? fill(ctx.t('upsell_combo'), { x: amount(hint.deltaCents, ctx), set: hint.label })
+    : fill(ctx.t('upsell_sauce'), { x: amount(hint.deltaCents, ctx) });
+  return html`<a class="upsell" href="#item-${hint.targetId}">${text}${hint.variant ? ` · ${ctx.pick(hint.variant)}` : ''}</a>`;
+}
+
+/** Row head: number in the left field, name (toggle when the row can expand), price. */
+function rowHead(item, ctx, priceHtml, expandable) {
+  const label = html`<span class="u-vh">${displayNo(item.number)} </span>${ctx.pick(item.title)}`;
+  return html`<span class="item__no" aria-hidden="true">${displayNo(item.number)}</span>
+    <div class="item__head"><h3 class="item__title" id="t-${item.id}"${nameLang(item.title, ctx)}>${expandable
+      ? html`<button class="item__toggle" type="button" aria-expanded="false" aria-controls="d-${item.id}" data-js="expand">${label}</button>`
+      : label}</h3>${priceHtml}</div>`;
 }
 
 // ---------- hero ----------
 
 export function heroBody(item, ctx) {
-  const title = ctx.pick(item.title);
   const phrase = ctx.pick(ctx.model.extras.hero_phrase);
   return html`
     <p class="kicker">${ctx.t('signature')}</p>
-    <h2 class="hero__title" id="hero-t"><span class="u-vh">${title}</span><span class="hero__letters" aria-hidden="true">${
-      Array.from(title).map((char, i) => html`<span style="--i:${i}">${char === ' ' ? ' ' : char}</span>`)}</span></h2>
+    <h2 class="hero__title" id="hero-t"${nameLang(item.title, ctx)}>${ctx.pick(item.title)}</h2>
     ${item.subtitle ? html`<p class="hero__sub">${ctx.pick(item.subtitle)}</p>` : ''}
-    <p class="hero__desc">${ctx.pick(item.description)}</p>
+    <p class="hero__desc clamp" id="d-hero">${ctx.pick(item.description)}</p>
+    <button class="more" type="button" aria-expanded="false" aria-controls="d-hero" data-js="expand">${ctx.t('more_toggle')}</button>
     <div class="hero__buy">${price(item.priceCents, ctx, { cls: 'price--xl' })}${phrase ? html`<span class="sticker">${phrase}</span>` : ''}</div>
     <div class="hero__meta">${meta(item, ctx)}${tagList(item, ctx)}</div>`;
+}
+
+export function teaser(model, ctx) {
+  const info = model.teaser;
+  if (!info) return '';
+  return html`<a class="teaser" href="#cat-${info.categoryId}">${icon('set')}<span>${
+    fill(ctx.t('teaser'), { cat: ctx.pick(info.name), x: amount(info.savingsCents, ctx) })}</span><span aria-hidden="true">↓</span></a>`;
 }
 
 // ---------- rows by kind ----------
@@ -145,61 +168,54 @@ export function heroBody(item, ctx) {
 function signatureRow(item, ctx) {
   const badge = html`<li class="tag tag--sig">${ctx.t('signature_badge')}</li>`;
   return html`<article class="item item--sig" id="item-${item.id}" aria-labelledby="t-${item.id}">
-    <span class="item__no" aria-hidden="true">${displayNo(item.number)}</span>
-    <div class="item__head"><h3 class="item__title" id="t-${item.id}">${titleFor(item, ctx)}</h3>${price(item.priceCents, ctx)}</div>
+    ${rowHead(item, ctx, price(item.priceCents, ctx), false)}
     ${tagList(item, ctx, badge)}
+    ${meta(item, ctx)}
     <a class="more" href="#qara">↑ ${ctx.t('more_above')}</a>
   </article>`;
 }
 
 function variantCells(item, ctx) {
-  const ownAllergens = variantsHaveOwnAllergens(item);
+  const own = ownAllergens(item);
   return html`<ul class="variants" role="list">${item.variants.map((v) => html`<li>
     <span class="variants__name">${ctx.pick(v.name)}</span>
-    <span class="variants__w">${sizeOf({ weightG: v.weightG }, ctx)}${
-      ownAllergens ? html` ${allergenList(v.allergens, ctx)}` : ''}</span>
+    <span class="variants__w">${sizeOf({ weightG: v.weightG }, ctx)}${own ? html` ${allergenList(v.allergens, ctx)}` : ''}</span>
     ${price(v.priceCents, ctx, { cls: 'price--s' })}</li>`)}</ul>`;
 }
 
+/** Dürüm / fries: compact row, description clamped to one line, the whole row toggles it. */
 function dishRow(item, ctx) {
   if (item.isHero) return signatureRow(item, ctx);
   const hasVariants = item.variants.length > 0;
+  const priceHtml = hasVariants ? priceSpan(item.variants.map((v) => v.priceCents), ctx) : price(item.priceCents, ctx);
   return html`<article class="item" id="item-${item.id}" aria-labelledby="t-${item.id}">
-    <span class="item__no" aria-hidden="true">${displayNo(item.number)}</span>
-    <div class="item__head">
-      <h3 class="item__title" id="t-${item.id}">${titleFor(item, ctx)}</h3>
-      ${hasVariants ? priceSpan(item.variants.map((v) => v.priceCents), ctx) : price(item.priceCents, ctx)}
-    </div>
+    ${rowHead(item, ctx, priceHtml, true)}
     ${item.subtitle ? html`<p class="item__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     ${tagList(item, ctx)}
-    <p class="item__desc">${ctx.pick(item.description)}</p>
+    <p class="item__desc clamp" id="d-${item.id}">${ctx.pick(item.description)}</p>
     ${hasVariants ? variantCells(item, ctx) : ''}
-    ${meta(item, ctx, { size: !hasVariants, allergens: !(hasVariants && variantsHaveOwnAllergens(item)) })}
+    ${meta(item, ctx, { size: !hasVariants, allergens: !(hasVariants && ownAllergens(item)) })}
+    ${upsell(item, ctx)}
   </article>`;
 }
 
 function lineVariants(item, ctx, sign) {
   if (!item.variants.length) return '';
-  const own = variantsHaveOwnAllergens(item);
+  const own = ownAllergens(item);
   return html`<ul class="line__vars" role="list">${item.variants.map((v) => html`<li class="line__var">
     <span>${ctx.pick(v.name)}</span>${price(v.priceCents, ctx, { sign })}
     ${v.spicyLevel ? spice(v.spicyLevel, ctx, false) : ''}${own ? allergenList(v.allergens, ctx) : ''}</li>`)}</ul>`;
 }
 
-/** Extras and drinks: compact lines; extras get "+price". */
+/** Extras and drinks: same number field as dishes, no paragraphs; extras get "+price". */
 function line(item, ctx) {
   const sign = item.isAddon ? '+' : '';
   const prices = item.variants.length ? item.variants.map((v) => v.priceCents) : [item.priceCents];
-  const own = item.variants.length > 0 && variantsHaveOwnAllergens(item);
-  const lineIcon = item.icon || null;
-  return html`<article class="line${lineIcon ? ' line--icon' : ''}" id="item-${item.id}" aria-labelledby="t-${item.id}">
-    ${lineIcon ? icon(lineIcon, 'line__icon') : ''}
-    <div>
-      <h3 class="line__name" id="t-${item.id}"><span class="line__no">${item.number}</span>${ctx.pick(item.title)}</h3>
-      <p class="line__desc">${ctx.pick(item.description)}</p>
-      ${meta(item, ctx, { size: item.volumeMl !== null, allergens: !own })}
-    </div>
-    ${priceSpan(prices, ctx, { sign, cls: `line__price${sign ? ' line__price--add' : ''}` })}
+  const priceHtml = priceSpan(prices, ctx, { sign, cls: sign ? 'price--add' : '' });
+  return html`<article class="item item--line" id="item-${item.id}" aria-labelledby="t-${item.id}">
+    ${rowHead(item, ctx, priceHtml, false)}
+    <p class="item__sub">${item.icon ? icon(item.icon, 'item__icon') : ''}${ctx.pick(item.description)}</p>
+    ${meta(item, ctx, { size: item.volumeMl !== null, allergens: !(item.variants.length && ownAllergens(item)) })}
     ${lineVariants(item, ctx, sign)}
   </article>`;
 }
@@ -209,7 +225,16 @@ function formula(set, ctx) {
   const names = ctx.model.ui.set_parts || {};
   return html`<ol class="formula" aria-label="${ctx.t('set_contents')}">${set.parts.map((part, i) => html`${
     i ? html`<li class="formula__plus" aria-hidden="true">+</li>` : ''}<li class="formula__part">${icon(PART_ICONS[part.key])}${
-    part.count > 1 ? `${part.count}× ` : ''}${ctx.pick(names[part.key])}</li>`)}</ol>`;
+    part.count > 1 ? `${part.count}× ` : ''}${ctx.pick(names[part.key])}${part.variant ? ` ${ctx.pick(part.variant)}` : ''}</li>`)}</ol>`;
+}
+
+/** "Dürüm: Original (Mal əti) · Gold" straight from set_choices. */
+function choices(set, ctx) {
+  if (!set || !set.choices.length) return '';
+  const names = ctx.model.ui.set_parts || {};
+  const option = (o) => (o.title && o.variant ? `${ctx.pick(o.title)} (${ctx.pick(o.variant)})` : ctx.pick(o.title || o.variant));
+  return html`<ul class="set__choices" role="list">${set.choices.map((slot) => html`<li><b>${ctx.pick(names[slot.key])}:</b> ${
+    slot.options.map(option).join(' · ')}</li>`)}</ul>`;
 }
 
 function setPricing(item, ctx) {
@@ -231,12 +256,13 @@ function availability(item, ctx) {
 function setCard(item, ctx, isFeature) {
   return html`<article class="set${isFeature ? ' set--feature' : ''}" id="item-${item.id}" aria-labelledby="t-${item.id}">
     <div class="set__top"><span class="set__no" aria-hidden="true">${item.number}</span>${tagList(item, ctx)}</div>
-    <h3 class="set__title" id="t-${item.id}"><span class="u-vh">${item.number} </span>${ctx.pick(item.title)}</h3>
+    <h3 class="set__title" id="t-${item.id}"${nameLang(item.title, ctx)}><span class="u-vh">${item.number} </span>${ctx.pick(item.title)}</h3>
     ${item.subtitle ? html`<p class="set__sub">${ctx.pick(item.subtitle)}</p>` : ''}
     ${formula(item.set, ctx)}
+    ${choices(item.set, ctx)}
+    <p class="set__desc">${ctx.pick(item.description)}</p>
     ${availability(item, ctx)}
     ${setPricing(item, ctx)}
-    <p class="set__desc">${ctx.pick(item.description)}</p>
     ${meta(item, ctx, { size: false })}
   </article>`;
 }
@@ -252,7 +278,7 @@ function categoryBody(category, ctx) {
     return html`<div class="sets">${category.items.map((item) => setCard(item, ctx, item.id === featureId))}</div>`;
   }
   const row = kind === 'line' ? line : dishRow;
-  return html`<div class="${kind === 'line' ? 'lines' : 'items'}">${category.items.map((item) => row(item, ctx))}</div>`;
+  return html`<div class="items">${category.items.map((item) => row(item, ctx))}</div>`;
 }
 
 function categorySection(category, ctx) {
@@ -290,7 +316,7 @@ function footer(model, ctx) {
         <ul class="legend" role="list">${legendKeys.map((key) => html`<li>${
           ALLERGEN_ICONS[key] ? icon(ALLERGEN_ICONS[key]) : ''}${ctx.pick(model.allergenLegend[key])}</li>`)}</ul></section>` : ''}
     </div>
-    ${model.notes ? html`<section class="notes" id="notes" aria-labelledby="notes-t">${
+    ${model.notes ? html`<section class="notes" id="notes" tabindex="-1" aria-labelledby="notes-t">${
       model.isDemo ? html`<b class="notes__demo">DEMO</b>` : ''}<h2 class="tile__t" id="notes-t">${ctx.t('notes_title')}</h2>
       <p>${ctx.pick(model.notes)}</p></section>` : ''}
     <p class="sign" aria-hidden="true">${model.brand.split(' ').map((word) => html`<span>${word}</span>`)}</p>
@@ -317,6 +343,7 @@ export function renderApp(model, ctx) {
     'demo-text': model.isDemo ? ctx.t('demo_short') : '',
     welcome: ctx.pick(model.extras.welcome),
     'hero-body': model.hero ? heroBody(model.hero, ctx) : '',
+    teaser: teaser(model, ctx),
     catnav: categoryNav(model.categories, ctx),
     menu: html`${model.categories.map((category) => categorySection(category, ctx))}`,
     foot: footer(model, ctx),

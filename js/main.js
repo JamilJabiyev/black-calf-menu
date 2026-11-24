@@ -1,16 +1,14 @@
 // Composition root: owns state and the DOM (render, language, scroll-spy, motion hooks).
-import { LANGS, loadMenu, createContext } from './model.js';
-import { mount, renderApp, errorState } from './views.js';
+import { LANGS, loadMenu, createContext } from './model.js?v=2026-11-24-r2';
+import { mount, renderApp, errorState } from './views.js?v=2026-11-24-r2';
 
 // Shown before or without menu.json, so they cannot live in its "ui" block.
 const OFFLINE_STRINGS = {
-  az: { loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', retry: 'Yenidən cəhd et' },
-  ru: { loading: 'Загружается…', title: 'Меню не загрузилось', text: 'Проверьте интернет или спросите на кассе.', retry: 'Повторить' },
-  en: { loading: 'Loading…', title: "The menu didn't load", text: 'Check your connection or ask at the counter.', retry: 'Try again' },
+  az: { page: 'Black Calf — Menyu', skip: 'Menyuya keç', loading: 'Yüklənir…', title: 'Menyu yüklənmədi', text: 'İnterneti yoxlayın və ya kassada soruşun.', empty: 'Menyu müvəqqəti əlçatan deyil. Kassada soruşun.', retry: 'Yenidən cəhd et' },
+  ru: { page: 'Black Calf — Меню', skip: 'Перейти к меню', loading: 'Загружается…', title: 'Меню не загрузилось', text: 'Проверьте интернет или спросите на кассе.', empty: 'Меню временно недоступно. Спросите на кассе.', retry: 'Повторить' },
+  en: { page: 'Black Calf — Menu', skip: 'Skip to menu', loading: 'Loading…', title: "The menu didn't load", text: 'Check your connection or ask at the counter.', empty: 'The menu is temporarily unavailable. Please ask at the counter.', retry: 'Try again' },
 };
 const STORAGE_KEY = 'bc-lang';
-const INTRO_MS = 2000;   // longest intro chain (smoke) ends at ~1.9 s
-const STAMP_MS = 1400;
 const SLOW_MS = 4000;
 
 const root = document.documentElement;
@@ -18,8 +16,10 @@ const $ = (name) => document.querySelector(`[data-js="${name}"]`);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const canAnimate = () => !reducedMotion.matches;
 const isDebug = ['localhost', '127.0.0.1'].includes(location.hostname) || new URLSearchParams(location.search).has('debug');
+/** Motion durations live in CSS (--intro-ms, --stamp-ms); JS only reads them. */
+const cssMs = (name) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || 0;
 
-const state = { lang: LANGS.includes(root.lang) ? root.lang : 'az', model: null };
+const state = { lang: LANGS.includes(root.lang) ? root.lang : 'az', model: null, error: null };
 const timers = { intro: 0, stamp: 0, slow: 0 };
 let spy = null;
 let setObserver = null;
@@ -29,16 +29,20 @@ const seenSets = new Set();
 
 function render() {
   const ctx = createContext(state.model, state.lang);
-  const parts = renderApp(state.model, ctx);
-  Object.entries(parts).forEach(([name, fragment]) => mount($(name), fragment));
-  document.title = ctx.t('page_title') || document.title;
-  $('h1').textContent = ctx.t('page_title');
-  $('skip').textContent = ctx.t('skip');
+  Object.entries(renderApp(state.model, ctx)).forEach(([name, fragment]) => mount($(name), fragment));
+  setChrome(ctx.t('page_title'), ctx.t('skip'));
   $('catnav').setAttribute('aria-label', ctx.t('categories_nav'));
   $('demo').hidden = !state.model.isDemo;
   $('hero').hidden = !state.model.hero;
   observeSections();
+  markReveal();
   armSets();
+}
+
+function setChrome(title, skip) {
+  document.title = title;
+  $('h1').textContent = title;
+  $('skip').textContent = skip;
 }
 
 function syncLangSwitch() {
@@ -46,7 +50,6 @@ function syncLangSwitch() {
   group.querySelectorAll('button').forEach((button) => {
     button.setAttribute('aria-pressed', String(button.dataset.lang === state.lang));
   });
-  group.style.setProperty('--lang-i', String(LANGS.indexOf(state.lang)));
 }
 
 function storeLang(lang) {
@@ -56,8 +59,7 @@ function storeLang(lang) {
 /** Keeps the same row under the sticky nav across a re-render (BA AC-01.7). */
 function captureAnchor() {
   const navBottom = $('catnav').getBoundingClientRect().bottom;
-  const rows = document.querySelectorAll('[id^="item-"], .cat');
-  for (const row of rows) {
+  for (const row of document.querySelectorAll('[id^="item-"], .cat')) {
     const top = row.getBoundingClientRect().top;
     if (top >= navBottom - 1) return { id: row.id, top };
   }
@@ -75,7 +77,8 @@ function setLang(next) {
   storeLang(next);
   syncLangSwitch();
   const update = () => {
-    root.lang = next; // also switches the font subset and AZ-correct uppercasing (i → İ)
+    root.lang = next; // switches the font subset, AZ-correct uppercasing (i → İ) and the language pill
+    if (state.error) return showError(state.error);
     if (!state.model) return;
     const anchor = captureAnchor();
     render();
@@ -90,15 +93,18 @@ function setLang(next) {
 
 function observeSections() {
   if (spy) spy.disconnect();
-  if (!('IntersectionObserver' in window)) return; // links still work as plain anchors
   const nav = $('catnav');
+  const navHeight = nav.offsetHeight;
+  root.style.setProperty('--nav-h', `${navHeight}px`); // the nav may wrap on desktop
+  if (!('IntersectionObserver' in window)) return; // links still work as plain anchors
   const links = new Map(Array.from(nav.querySelectorAll('a'), (link) => [link.hash.slice(1), link]));
   const visible = new Set();
   spy = new IntersectionObserver((entries) => {
     entries.forEach((entry) => (entry.isIntersecting ? visible.add(entry.target.id) : visible.delete(entry.target.id)));
-    const id = Array.from(links.keys()).find((key) => visible.has(key));
+    let id = null;
+    for (const key of links.keys()) if (visible.has(key)) id = key; // the lowest section in the band is the one being read
     if (id) setActiveLink(nav, links.get(id));
-  }, { rootMargin: `-${nav.offsetHeight}px 0px -55% 0px` });
+  }, { rootMargin: `-${navHeight + 2}px 0px -55% 0px` }); // +2: a section merely touching the nav edge is not "current"
   document.querySelectorAll('.cat').forEach((section) => spy.observe(section));
 }
 
@@ -115,24 +121,12 @@ function setActiveLink(nav, link) {
 
 // ---------- motion hooks (visuals live in CSS) ----------
 
-function startIntro() {
-  if (!canAnimate() || !state.model.hero) return;
-  try {
-    if (sessionStorage.getItem('bc-intro')) return; // the brand scene plays once per visit
-    sessionStorage.setItem('bc-intro', '1');
-  } catch { /* storage blocked: play it */ }
-  root.classList.add('is-intro');
-  $('stamp').classList.add('is-stamping');
-  timers.intro = setTimeout(endIntro, INTRO_MS);
-}
-
+/** The stamp scene starts at first paint (inline script sets html.is-intro); here we only end it. */
 function endIntro() {
   clearTimeout(timers.intro);
   root.classList.remove('is-intro');
-  $('stamp').classList.remove('is-stamping');
 }
 
-/** Tap on the stamp replays the scene. */
 function restamp() {
   if (!canAnimate() || root.classList.contains('is-intro')) return;
   const stamp = $('stamp');
@@ -140,26 +134,42 @@ function restamp() {
   void stamp.offsetWidth; // restart CSS animations from frame 0
   stamp.classList.add('is-stamping');
   clearTimeout(timers.stamp);
-  timers.stamp = setTimeout(() => stamp.classList.remove('is-stamping'), STAMP_MS);
+  timers.stamp = setTimeout(() => stamp.classList.remove('is-stamping'), cssMs('--stamp-ms'));
 }
 
-/** Savings strike + stamp: once per set, when 60 % in view. */
+/** Only content that starts below the first screen may fade in; what the guest already sees stays put. */
+function markReveal() {
+  if (!canAnimate()) return;
+  const fold = window.innerHeight;
+  const below = Array.from(document.querySelectorAll('.set, .cat__head')).filter((el) => el.getBoundingClientRect().top > fold);
+  below.forEach((el) => el.classList.add('reveal'));
+}
+
+/** Savings strike + stamp, once per set, when the price block itself is fully in view. */
 function armSets() {
   if (setObserver) setObserver.disconnect();
   if (!canAnimate() || !('IntersectionObserver' in window)) return;
   setObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
     if (!entry.isIntersecting) return;
-    entry.target.classList.add('is-seen');
-    seenSets.add(entry.target.id);
+    const card = entry.target.closest('.set');
+    card.classList.add('is-seen');
+    seenSets.add(card.id);
     setObserver.unobserve(entry.target);
-  }), { threshold: 0.6 });
-  const foldY = window.innerHeight;
-  document.querySelectorAll('.set').forEach((card) => {
-    // cards already on screen stay static: never hide a price fact the guest is reading
-    if (seenSets.has(card.id) || !card.querySelector('.save') || card.getBoundingClientRect().top < foldY) return;
-    card.classList.add('is-armed');
-    setObserver.observe(card);
+  }), { threshold: 1, rootMargin: '0px 0px -15% 0px' });
+  const fold = window.innerHeight;
+  const blocks = Array.from(document.querySelectorAll('.set__price'))
+    .filter((block) => block.querySelector('.save') && !seenSets.has(block.closest('.set').id))
+    .filter((block) => block.getBoundingClientRect().top > fold); // reads first, writes below
+  blocks.forEach((block) => {
+    block.closest('.set').classList.add('is-armed');
+    setObserver.observe(block);
   });
+}
+
+function toggleExpand(button) {
+  const open = button.getAttribute('aria-expanded') !== 'true';
+  button.setAttribute('aria-expanded', String(open));
+  button.closest('.item, .hero').toggleAttribute('data-open', open);
 }
 
 // ---------- boot ----------
@@ -168,12 +178,14 @@ function reportWarnings(warnings) {
   if (isDebug) warnings.forEach((warning) => console.warn(`[menu] ${warning}`));
 }
 
-function showError() {
+function showError(error) {
   const strings = OFFLINE_STRINGS[state.lang];
+  state.error = error;
   $('hero').hidden = true;
   $('catnav').hidden = true;
-  $('status').textContent = '';
-  mount($('menu'), errorState(strings));
+  setChrome(strings.page, strings.skip);
+  const message = error.message === 'empty' ? { ...strings, text: strings.empty } : strings;
+  mount($('menu'), errorState(message));
   $('error-title').focus();
 }
 
@@ -185,13 +197,12 @@ async function boot() {
     const { model, warnings } = await loadMenu('menu.json');
     reportWarnings(warnings);
     state.model = model;
-    root.lang = state.lang;
+    state.error = null;
     render();
-    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
-    startIntro();
+    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: 'instant' });
   } catch (error) {
     if (isDebug) console.warn('[menu] load failed:', error.message);
-    showError();
+    showError(error);
   } finally {
     clearTimeout(timers.slow);
   }
@@ -203,7 +214,13 @@ function wireEvents() {
     if (button) setLang(button.dataset.lang);
   });
   $('stamp').addEventListener('click', restamp);
-  $('menu').addEventListener('click', (event) => {
+  $('catnav').addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (link) setActiveLink($('catnav'), link); // immediate feedback; the spy confirms on arrival
+  });
+  document.addEventListener('click', (event) => {
+    const expand = event.target.closest('[data-js="expand"]');
+    if (expand) toggleExpand(expand);
     if (!event.target.closest('[data-js="retry"]')) return;
     $('hero').hidden = false;
     $('catnav').hidden = false;
@@ -221,6 +238,7 @@ function registerServiceWorker() {
   else addEventListener('load', register, { once: true });
 }
 
+if (root.classList.contains('is-intro')) timers.intro = setTimeout(endIntro, cssMs('--intro-ms'));
 syncLangSwitch();
 wireEvents();
 boot();
