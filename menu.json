@@ -1,15 +1,16 @@
 {
   "brand": "Black Calf",
+  "schema_version": 2,
   "currency": "AZN",
   "is_demo": true,
-  "version": "2026-11-24-demo-v1",
+  "version": "2026-11-24-demo-v2",
   "languages": [
     "az",
     "ru",
     "en"
   ],
   "default_language": "az",
-  "schema_notes": "set_items use 'item-id' or 'item-id:variant-id'. Items with 'variants' show variant prices; 'price' = main/default variant. Tag 'halal_tbd' is internal and must NOT be displayed. 'is_addon' items are shown as '+price'. Sets: 'price_separately' and 'savings' are computed for the default set_items; 'savings_range' covers all allowed choices.",
+  "schema_notes": "set_items use 'item-id' or 'item-id:variant-id'. Items with 'variants' show variant prices; 'price' = main/default variant. 'is_addon' items are shown as '+price'. Sets: 'price_separately' and 'savings' are for the default set_items, 'savings_range' covers all allowed set_choices; the site recomputes all three from item prices and hides the savings if they disagree. Only tags hit/new/spicy/veg are ever shown; 'hero' marks the hero item. Sets whose availability.status starts with 'tbd' are hidden. 'ui' holds interface strings; 'search_terms' is not rendered.",
   "tag_labels": {
     "hit": {
       "az": "Hit",
@@ -67,6 +68,7 @@
         "ru": "Сеты и комбо",
         "en": "Combos"
       },
+      "icon": "set",
       "items": [
         {
           "id": "set-solo",
@@ -80,6 +82,11 @@
             "az": "4 ₼-lıq dürüm seçimi (№3 mal ətli Original, №6 Midnight və ya №7 Rebel) + Saman fri + Cola 0,3 və ya ayran. Bir inadkarın naharı.",
             "ru": "Дюрюм за 4 ₼ на выбор (№3 Original с говядиной, №6 Midnight или №7 Rebel) + фри Saman + Cola 0,3 или айран. Обед одного упрямого.",
             "en": "A 4 ₼ dürüm of your choice (No.3 beef Original, No.6 Midnight or No.7 Rebel) + Saman fries + Cola 0.3 or ayran. Lunch for one stubborn soul."
+          },
+          "short_description": {
+            "az": "4 ₼-lıq dürüm seçimi (mal ətli Original, Midnight və ya Rebel) + Saman fri + Cola 0,3 və ya ayran. Bir inadkarın naharı.",
+            "ru": "Дюрюм за 4 ₼ на выбор (Original с говядиной, Midnight или Rebel) + фри Saman + Cola 0,3 или айран. Обед одного упрямого.",
+            "en": "A 4 ₼ dürüm of your choice (beef Original, Midnight or Rebel) + Saman fries + Cola 0.3 or ayran. Lunch for one stubborn soul."
           },
           "price": 6.9,
           "weight_g": null,
@@ -128,6 +135,11 @@
             "az": "2 dürüm seçimi (№3 mal ətli Original, №4 Gold, №6 Midnight, №7 Rebel, №8 Dost) + böyük Saman fri + 2 içki (Cola 0,3 və ya ayran) + 1 sous. İki nəfərlik — Black Calf da belə başladı.",
             "ru": "2 дюрюма на выбор (№3 Original с говядиной, №4 Gold, №6 Midnight, №7 Rebel, №8 Dost) + большая фри Saman + 2 напитка (Cola 0,3 или айран) + 1 соус. На двоих — как и начинался Black Calf.",
             "en": "2 dürüms of your choice (No.3 beef Original, No.4 Gold, No.6 Midnight, No.7 Rebel, No.8 Dost) + large Saman fries + 2 drinks (Cola 0.3 or ayran) + 1 sauce. For two. That's how Black Calf began."
+          },
+          "short_description": {
+            "az": "2 dürüm seçimi (mal ətli Original, Gold, Midnight, Rebel, Dost) + böyük Saman fri + 2 içki (Cola 0,3 və ya ayran) + 1 sous. İki nəfərlik — Black Calf da belə başladı.",
+            "ru": "2 дюрюма на выбор (Original с говядиной, Gold, Midnight, Rebel, Dost) + большая фри Saman + 2 напитка (Cola 0,3 или айран) + 1 соус. На двоих — как и начинался Black Calf.",
+            "en": "2 dürüms of your choice (beef Original, Gold, Midnight, Rebel, Dost) + large Saman fries + 2 drinks (Cola 0.3 or ayran) + 1 sauce. For two. That's how Black Calf began."
           },
           "price": 13.9,
           "weight_g": null,
@@ -183,6 +195,11 @@
             "az": "4 dürüm seçimi (S2-dəki siyahıdan) + 2 böyük Saman fri + 4 içki (Cola 0,3 və ya ayran) + 2 sous. Bütün sürü bir yerdə. Ofis naharı üçün.",
             "ru": "4 дюрюма на выбор (из списка S2) + 2 большие фри Saman + 4 напитка (Cola 0,3 или айран) + 2 соуса. Всё стадо в сборе. Для обеда в офисе.",
             "en": "4 dürüms of your choice (from the S2 list) + 2 large Saman fries + 4 drinks (Cola 0.3 or ayran) + 2 sauces. The whole herd's here. Office lunch sorted."
+          },
+          "short_description": {
+            "az": "4 dürüm seçimi (Dost Set-dəki siyahıdan) + 2 böyük Saman fri + 4 içki (Cola 0,3 və ya ayran) + 2 sous. Bütün sürü bir yerdə. Ofis naharı üçün.",
+            "ru": "4 дюрюма на выбор (из списка Dost Set) + 2 большие фри Saman + 4 напитка (Cola 0,3 или айран) + 2 соуса. Всё стадо в сборе. Для обеда в офисе.",
+            "en": "4 dürüms of your choice (from the Dost Set list) + 2 large Saman fries + 4 drinks (Cola 0.3 or ayran) + 2 sauces. The whole herd's here. Office lunch sorted."
           },
           "price": 27.5,
           "weight_g": null,
@@ -245,6 +262,11 @@
             "ru": "№6 Midnight + Gold Fries + чай. С 22:00 до закрытия. Ночная смена для героев.",
             "en": "No.6 Midnight + Gold Fries + tea. From 22:00 until closing. Night shift fuel."
           },
+          "short_description": {
+            "az": "Midnight + Gold Fries + çay. Saat 22:00-dan bağlanana qədər. Qəhrəmanlar üçün gecə növbəsi.",
+            "ru": "Midnight + Gold Fries + чай. С 22:00 до закрытия. Ночная смена для героев.",
+            "en": "Midnight + Gold Fries + tea. From 22:00 until closing. Night shift fuel."
+          },
           "price": 7.5,
           "weight_g": null,
           "spicy_level": 0,
@@ -281,6 +303,7 @@
         "ru": "Дюрюмы",
         "en": "Dürüm wraps"
       },
+      "icon": "durum",
       "items": [
         {
           "id": "durum-qara",
@@ -293,15 +316,17 @@
           "description": {
             "az": "Şiş mal əti, pendir, sumaqlı soğan və narşərablı qara sous. Tünd qızardılmış lavaş, qara küncüt və çörəkotu. Buzov damğasını gözünün qabağında vururuq.",
             "ru": "Говядина с вертела, сыр, лук с сумахом и чёрный соус на наршарабе. Лаваш с тёмной корочкой, чёрный кунжут и нигелла. Клеймо телёнка ставим при тебе.",
-            "en": "Beef doner off the spit, cheese, sumac onions and black narsharab sauce in a grill-darkened lavash with black sesame and nigella. Branded with the calf while you watch. Beef durum wrap."
+            "en": "Beef doner off the spit, cheese, sumac onions and black narsharab sauce in a grill-darkened lavash with black sesame and nigella. Branded with the calf while you watch."
+          },
+          "search_terms": {
+            "en": "Beef durum wrap."
           },
           "price": 5.9,
           "weight_g": 305,
           "spicy_level": 1,
           "tags": [
             "hero",
-            "new",
-            "halal_tbd"
+            "new"
           ],
           "allergens": [
             "gluten",
@@ -321,14 +346,15 @@
           "description": {
             "az": "160 q şiş mal əti — Original-dan iki dəfə çox. Sumaqlı soğan, pomidor, ağ və qırmızı sous. Burada qərarı o verir.",
             "ru": "160 г говядины с вертела — вдвое больше, чем в Original. Лук с сумахом, томаты, белый и красный соус. Здесь решает он.",
-            "en": "160 g of beef off the spit — twice the meat of the Original. Sumac onions, tomato, white and red sauce. He's in charge. Double beef doner wrap."
+            "en": "160 g of beef off the spit — twice the meat of the Original. Sumac onions, tomato, white and red sauce. He's in charge."
+          },
+          "search_terms": {
+            "en": "Double beef doner wrap."
           },
           "price": 6.5,
           "weight_g": 370,
           "spicy_level": 1,
-          "tags": [
-            "halal_tbd"
-          ],
+          "tags": [],
           "allergens": [
             "gluten",
             "milk",
@@ -347,14 +373,16 @@
           "description": {
             "az": "Toyuq — duzlu xiyarla, ya da mal əti — sumaqlı soğanla. Pomidor, xiyar, kahı, ağ sarımsaqlı sous, isti lavaş. Hər şey ondan başladı. Lavaşda dönər, şaurma.",
             "ru": "Курица с маринованным огурцом или говядина с луком и сумахом. Томаты, огурец, салат, белый чесночный соус, горячий лаваш. Тот самый — с него всё началось. Донер в лаваше, шаурма.",
-            "en": "Chicken with pickles or beef with sumac onions. Tomato, cucumber, lettuce, white garlic sauce, hot grilled lavash. The one that started it all. Classic doner / shawarma durum wrap."
+            "en": "Chicken with pickles or beef with sumac onions. Tomato, cucumber, lettuce, white garlic sauce, hot grilled lavash. The one that started it all."
+          },
+          "search_terms": {
+            "en": "Classic doner / shawarma durum wrap."
           },
           "price": 4.0,
           "weight_g": 280,
           "spicy_level": 0,
           "tags": [
-            "hit",
-            "halal_tbd"
+            "hit"
           ],
           "allergens": [
             "gluten",
@@ -397,14 +425,16 @@
           "description": {
             "az": "Şiş toyuq, 40 q uzanan pendir, pomidor, ağ sous. Pendir əriyənə qədər qrildə sıxırıq. Həftə sonu kimi uzanır.",
             "ru": "Курица с вертела, 40 г тянущегося сыра, томаты, белый соус. Прижимаем на гриле, пока сыр не поплывёт. Тянется, как вечер пятницы.",
-            "en": "Chicken off the spit, 40 g of stretchy cheese, tomato, white sauce. Pressed on the grill until the cheese melts. Stretches like a Friday night. Chicken cheese durum wrap."
+            "en": "Chicken off the spit, 40 g of stretchy cheese, tomato, white sauce. Pressed on the grill until the cheese melts. Stretches like a Friday night."
+          },
+          "search_terms": {
+            "en": "Chicken cheese durum wrap."
           },
           "price": 4.5,
           "weight_g": 280,
           "spicy_level": 0,
           "tags": [
-            "hit",
-            "halal_tbd"
+            "hit"
           ],
           "allergens": [
             "gluten",
@@ -424,7 +454,10 @@
           "description": {
             "az": "Xırtıldayan fri, pendir, pomidor, xiyar, kahı, duzlu xiyar, göyərtili soğan və ağ sous. Ətsiz, amma xarakterli.",
             "ru": "Хрустящая фри, сыр, томаты, огурец, салат, маринованный огурец, лук с зеленью и белый соус. Без мяса, но с характером.",
-            "en": "Crispy fries, cheese, tomato, cucumber, lettuce, pickles, herby onions and white sauce. No meat. Still stubborn. Vegetarian wrap (not vegan)."
+            "en": "Crispy fries, cheese, tomato, cucumber, lettuce, pickles, herby onions and white sauce. No meat. Still stubborn."
+          },
+          "search_terms": {
+            "en": "Vegetarian wrap (not vegan)."
           },
           "price": 3.5,
           "weight_g": 320,
@@ -450,14 +483,15 @@
           "description": {
             "az": "Şiş toyuq, içində kartof fri, duzlu xiyar, pomidor və bol sarımsaqlı sous. Bakı üsulu ilə doyurucu. Gecə yarısından sonra üçün.",
             "ru": "Курица с вертела, фри прямо внутри, маринованный огурец, томат и двойной чесночный соус. Сытно, по-бакински. Создан для после полуночи.",
-            "en": "Chicken off the spit, fries right inside, pickles, tomato and extra garlic sauce. Baku-style filling. Built for after midnight. Chicken shawarma wrap with fries."
+            "en": "Chicken off the spit, fries right inside, pickles, tomato and extra garlic sauce. Baku-style filling. Built for after midnight."
+          },
+          "search_terms": {
+            "en": "Chicken shawarma wrap with fries."
           },
           "price": 4.0,
           "weight_g": 305,
           "spicy_level": 0,
-          "tags": [
-            "halal_tbd"
-          ],
+          "tags": [],
           "allergens": [
             "gluten",
             "milk",
@@ -476,14 +510,16 @@
           "description": {
             "az": "Şiş toyuq, halapenyo, qırmızı acı sous, pomidor, xiyar, kahı. Acı və inadkar. Ayran yanındadır — hər ehtimala qarşı.",
             "ru": "Курица с вертела, халапеньо, красный острый соус, томаты, огурец, салат. Острый и упрямый. Айран рядом — на всякий случай.",
-            "en": "Chicken off the spit, jalapeños, red hot sauce, tomato, cucumber, lettuce. Hot-headed. Bites back. Ayran's right here, just in case. Spicy chicken durum wrap."
+            "en": "Chicken off the spit, jalapeños, red hot sauce, tomato, cucumber, lettuce. Hot-headed. Bites back. Ayran's right here, just in case."
+          },
+          "search_terms": {
+            "en": "Spicy chicken durum wrap."
           },
           "price": 4.0,
           "weight_g": 285,
           "spicy_level": 2,
           "tags": [
-            "spicy",
-            "halal_tbd"
+            "spicy"
           ],
           "allergens": [
             "gluten",
@@ -502,14 +538,15 @@
           "description": {
             "az": "Yarı toyuq, yarı mal əti, duzlu xiyar, tərəvəz, ağ və qırmızı sous. Bir lavaşda iki dost — birlikdə daha dadlı.",
             "ru": "Курица и говядина пополам, маринованный огурец, овощи, белый и красный соус. Двое в одном лаваше: вместе вкуснее.",
-            "en": "Half chicken, half beef, pickles, veggies, white and red sauce. Two meats, one wrap. Better together. Mixed doner durum wrap."
+            "en": "Half chicken, half beef, pickles, veggies, white and red sauce. Two meats, one wrap. Better together."
+          },
+          "search_terms": {
+            "en": "Mixed doner durum wrap."
           },
           "price": 4.5,
           "weight_g": 300,
           "spicy_level": 1,
-          "tags": [
-            "halal_tbd"
-          ],
+          "tags": [],
           "allergens": [
             "gluten",
             "milk",
@@ -526,6 +563,7 @@
         "ru": "Картофель фри",
         "en": "Fries"
       },
+      "icon": "fries",
       "items": [
         {
           "id": "fries-saman",
@@ -631,14 +669,16 @@
           "description": {
             "az": "Fri, 60 q şiş mal əti, pendir, sumaqlı soğan, ağ və qırmızı sous. Lavaşını atmış dürüm.",
             "ru": "Фри, 60 г говядины с вертела, сыр, лук с сумахом, белый и красный соус зигзагом. Дюрюм, который сбросил лаваш.",
-            "en": "Fries loaded with 60 g of beef off the spit, cheese, sumac onions, white and red sauce. A dürüm that lost its wrap. Loaded doner fries."
+            "en": "Fries loaded with 60 g of beef off the spit, cheese, sumac onions, white and red sauce. A dürüm that lost its wrap."
+          },
+          "search_terms": {
+            "en": "Loaded doner fries."
           },
           "price": 4.9,
           "weight_g": 270,
           "spicy_level": 1,
           "tags": [
-            "new",
-            "halal_tbd"
+            "new"
           ],
           "allergens": [
             "milk",
@@ -655,6 +695,7 @@
         "ru": "Соусы и допы",
         "en": "Sauces & extras"
       },
+      "icon": "sauce",
       "items": [
         {
           "id": "extra-sauce",
@@ -772,9 +813,7 @@
           "price": 1.0,
           "weight_g": 40,
           "spicy_level": 0,
-          "tags": [
-            "halal_tbd"
-          ],
+          "tags": [],
           "allergens": [
             "milk"
           ],
@@ -840,6 +879,7 @@
         "ru": "Напитки",
         "en": "Drinks"
       },
+      "icon": "cup",
       "items": [
         {
           "id": "drink-ayran",
@@ -862,7 +902,8 @@
           "allergens": [
             "milk"
           ],
-          "image": null
+          "image": null,
+          "icon": "ayran"
         },
         {
           "id": "drink-cola",
@@ -883,7 +924,8 @@
           "spicy_level": 0,
           "tags": [],
           "allergens": [],
-          "image": null
+          "image": null,
+          "icon": "cup"
         },
         {
           "id": "drink-tea",
@@ -904,7 +946,8 @@
           "spicy_level": 0,
           "tags": [],
           "allergens": [],
-          "image": null
+          "image": null,
+          "icon": "armudu"
         },
         {
           "id": "drink-water",
@@ -925,7 +968,8 @@
           "spicy_level": 0,
           "tags": [],
           "allergens": [],
-          "image": null
+          "image": null,
+          "icon": "bottle"
         },
         {
           "id": "drink-lemonade",
@@ -946,7 +990,8 @@
           "spicy_level": 0,
           "tags": [],
           "allergens": [],
-          "image": null
+          "image": null,
+          "icon": "cup"
         }
       ]
     }
@@ -967,23 +1012,6 @@
       "ru": "Есть кое-что, чего нет в меню. Спроси у мастера.",
       "en": "There's something that's not on the menu. Ask the master."
     },
-    "secret_item_internal": {
-      "id": "durum-qara-boss",
-      "show": false,
-      "name": {
-        "az": "QARA Boss",
-        "ru": "QARA Boss",
-        "en": "QARA Boss"
-      },
-      "description_ru": "QARA с двойной говядиной (160 г). Для владельцев карты с 5+ штампами или по кодовому слову недели из Telegram-канала.",
-      "price": 7.5,
-      "weight_g": 365,
-      "allergens": [
-        "gluten",
-        "milk",
-        "sesame"
-      ]
-    },
     "hero_phrase": {
       "az": "Qara hazırdır!",
       "ru": "Чёрный готов!",
@@ -1000,5 +1028,166 @@
     "phone": null,
     "maps_url": null,
     "instagram": null
+  },
+  "ui": {
+    "page_title": {
+      "az": "Black Calf — Menyu",
+      "ru": "Black Calf — Меню",
+      "en": "Black Calf — Menu"
+    },
+    "skip": {
+      "az": "Menyuya keç",
+      "ru": "Перейти к меню",
+      "en": "Skip to menu"
+    },
+    "demo_short": {
+      "az": "Qiymətlər təxminidir",
+      "ru": "Цены ориентировочные",
+      "en": "Prices are indicative"
+    },
+    "categories_nav": {
+      "az": "Kateqoriyalar",
+      "ru": "Категории",
+      "en": "Categories"
+    },
+    "signature": {
+      "az": "İmza dürüm",
+      "ru": "Фирменный дюрюм",
+      "en": "Signature dürüm"
+    },
+    "signature_badge": {
+      "az": "İmza",
+      "ru": "Фирменный",
+      "en": "Signature"
+    },
+    "more_above": {
+      "az": "Ətraflı",
+      "ru": "Подробнее",
+      "en": "Details"
+    },
+    "number_sr": {
+      "az": "№{n}",
+      "ru": "№{n}",
+      "en": "No. {n}"
+    },
+    "manat": {
+      "az": "manat",
+      "ru": "манат",
+      "en": "manat"
+    },
+    "price_at_counter": {
+      "az": "qiymət kassada",
+      "ru": "цена на кассе",
+      "en": "price at the counter"
+    },
+    "separately": {
+      "az": "Ayrı-ayrılıqda {x}",
+      "ru": "По отдельности {x}",
+      "en": "Separately {x}"
+    },
+    "separately_from": {
+      "az": "Ayrı-ayrılıqda {x}-dan",
+      "ru": "По отдельности от {x}",
+      "en": "Separately from {x}"
+    },
+    "save": {
+      "az": "Qənaət {x}",
+      "ru": "Выгода {x}",
+      "en": "You save {x}"
+    },
+    "save_from": {
+      "az": "Qənaət {x}-dan",
+      "ru": "Выгода от {x}",
+      "en": "Save from {x}"
+    },
+    "set_contents": {
+      "az": "Tərkib",
+      "ru": "Состав",
+      "en": "What's inside"
+    },
+    "set_parts": {
+      "durum": {
+        "az": "Dürüm",
+        "ru": "Дюрюм",
+        "en": "Dürüm"
+      },
+      "fries": {
+        "az": "Fri",
+        "ru": "Фри",
+        "en": "Fries"
+      },
+      "drink": {
+        "az": "İçki",
+        "ru": "Напиток",
+        "en": "Drink"
+      },
+      "sauce": {
+        "az": "Sous",
+        "ru": "Соус",
+        "en": "Sauce"
+      }
+    },
+    "units": {
+      "g": {
+        "az": "q",
+        "ru": "г",
+        "en": "g"
+      },
+      "l": {
+        "az": "l",
+        "ru": "л",
+        "en": "l"
+      }
+    },
+    "spicy_level": {
+      "az": "Acılıq",
+      "ru": "Острота",
+      "en": "Spice level"
+    },
+    "allergens": {
+      "az": "Allergenlər",
+      "ru": "Аллергены",
+      "en": "Allergens"
+    },
+    "available_until_close": {
+      "az": "{from}-dan bağlanana qədər",
+      "ru": "С {from} до закрытия",
+      "en": "From {from} until closing"
+    },
+    "loyalty_title": {
+      "az": "Loyallıq kartı",
+      "ru": "Карта лояльности",
+      "en": "Loyalty card"
+    },
+    "secret_title": {
+      "az": "Sirr",
+      "ru": "Секрет",
+      "en": "Secret"
+    },
+    "notes_title": {
+      "az": "Vacib məlumat",
+      "ru": "Важно знать",
+      "en": "Good to know"
+    },
+    "version": {
+      "az": "Versiya",
+      "ru": "Версия",
+      "en": "Version"
+    },
+    "contact": {
+      "az": "Əlaqə",
+      "ru": "Связаться",
+      "en": "Contact"
+    },
+    "call": {
+      "az": "Zəng et",
+      "ru": "Позвонить",
+      "en": "Call"
+    },
+    "map": {
+      "az": "Xəritə",
+      "ru": "Маршрут",
+      "en": "Directions"
+    }
   }
 }
